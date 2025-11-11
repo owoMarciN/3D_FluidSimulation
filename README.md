@@ -26,22 +26,20 @@ Goal: get a 3D incompressible flow running, visualize it
 
 ## Phase 2 — Propeller interaction
 
-Goal: embed your propeller mesh into the grid.
-
-    1. Load the mesh (Assimp or tinyobjloader).
-    2. Mark grid cells as solid.
-    3. Enforce no-penetration at propeller surfaces by setting normal velocity equal to the propeller’s local surface velocity.
+    - Load the mesh (Assimp or tinyobjloader).
+    - Mark grid cells as solid.
+    - Enforce no-penetration at propeller surfaces by setting normal velocity equal to the propeller’s local surface velocity.
 
 **TEST** Flow moves around the spinning propeller with plausible vortices.
 
 
 ## Phase 3 — Cavitation
 
-    1. Add arrays for: 
+    - Add arrays for: 
         - pressure field (p)
         - vapor fraction `alpha`
-    2. Compute local minima of pressure -> that’s where cavitation 'could' occur.
-    3. Color low-pressure regions differently to preview where bubbles might form.
+    - Compute local minima of pressure -> that’s where cavitation 'could' occur.
+    - Color low-pressure regions differently to preview where bubbles might form.
 
 **TEST** Visual low-pressure zones appear behind propeller blades.
 
