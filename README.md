@@ -1,11 +1,7 @@
 # 3D_FluidSimulation
 3D fluid simulation using SDL3 + OpenGL libraries
 
-## Phase 1 — Core fluid solver (grid-based “Stable Fluids”)
-
-Goal: get a 3D incompressible flow running, visualize it
-
-### Steps
+## Phase 1 — Fuid solver
 
 1. Set up the grid in 3D
 
@@ -23,7 +19,6 @@ Goal: get a 3D incompressible flow running, visualize it
     - Render velocity magnitude, streamlines, or dye density.
     - Verify things stay bounded and flow behaves plausibly.
 
-
 ## Phase 2 — Propeller interaction
 
  1. Load the mesh (Assimp or tinyobjloader).
@@ -31,7 +26,6 @@ Goal: get a 3D incompressible flow running, visualize it
  3. Enforce no-penetration at propeller surfaces by setting normal velocity equal to the propeller’s local surface velocity.
 
 **TEST** Flow moves around the spinning propeller with plausible vortices.
-
 
 ## Phase 3 — Cavitation
 
@@ -67,4 +61,3 @@ Goal: get a 3D incompressible flow running, visualize it
 1. From particle volumes compute per-cell void fraction α.
 2. Modify mixture density
 3. Verify conservation and stability.
-
