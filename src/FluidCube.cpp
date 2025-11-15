@@ -10,16 +10,16 @@ FluidCube::FluidCube(int size, float dt, int iter, float diffusion, float viscos
     this->visc = viscosity;
     
     int total_size = N * N * N;
-    this->s = new float[N * N * N];
-    this->density = new float[N * N * N];
+    this->s = new float[total_size];
+    this->density = new float[total_size];
     
-    this->Vx = new float[N * N * N];
-    this->Vy = new float[N * N * N];
-    this->Vz = new float[N * N * N];
+    this->Vx = new float[total_size];
+    this->Vy = new float[total_size];
+    this->Vz = new float[total_size];
     
-    this->Vx0 = new float[N * N * N];
-    this->Vy0 = new float[N * N * N];
-    this->Vz0 = new float[N * N * N];
+    this->Vx0 = new float[total_size];
+    this->Vy0 = new float[total_size];
+    this->Vz0 = new float[total_size];
 }
 
 FluidCube::~FluidCube() {

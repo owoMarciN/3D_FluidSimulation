@@ -1,25 +1,18 @@
-// Implementacja testowa symulacji z wolnym ruchem kamery
-//-------------------------------------------------------
-// Kompilacja WIN32:        
-//            g++ src/*.cpp src/*c -Iinclude -I/ucrt64/include/ -o turbine -lSDL3 -lopengl32
-//            turbine.exe
-//-------------------------------------------------------
-// Kompilacja LINUX: 
-//            g++ src/*.cpp src/*.c -Iinclude -o turbine -lSDL3 -lGL
-//            ./turbine
-//-------------------------------------------------------
-// JAK COŚ SIĘ SPIERDOLI!!: 
-//            g++ -g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer src/*.cpp src/*.c -Iinclude -o turbine $(pkg-config --cflags --libs sdl3)  
-//            ./turbine                   
-//-------------------------------------------------------
-
 #include "Simulation.hpp"
 
 Simulation::Simulation(): mTimer(Timer::Instance()) {
+    // Nazwa okna
     window_name = "Kaplan Propeller";
-    running     = true;
-    model_path = "assets/models/Propeller.obj";
+
+    // Ścieżka do naszego modelu 3D
+    model_path 	= "assets/models/Propeller.obj";
+
+    // Ścieżka do shaderów
     shader_path = "assets/shaders/";
+
+    // Zmienna upewniająca się, że symulacja pracuje
+    running     = true;
+    
     // Initializujemy symulacje
     if (!Init()) running = false;
 
@@ -29,9 +22,10 @@ Simulation::Simulation(): mTimer(Timer::Instance()) {
     camUp    = glm::vec3(0.0f, 1.0f, 0.0f);
 
     // Mysz
-    cameraSpeed = 0.05f;
+    cameraSpeed  = 0.05f;
+    mouseCapture = true;
 
-    // Rotacje
+    // Rotacje modelu
     yaw   = -90.0f;
     pitch = 0.0f;
 
@@ -64,6 +58,7 @@ void Simulation::processInput() {
 }
 
 void Simulation::mouseMovement(int xoffset, int yoffset) {
+    // Czułość ruchów myszy
     float sensitivity = 0.08f;
     xoffset *= sensitivity;
     yoffset *= sensitivity;
@@ -72,76 +67,108 @@ void Simulation::mouseMovement(int xoffset, int yoffset) {
     yaw   += xoffset;
     pitch += -yoffset; // odwrócone Y myszy
 
-    // Blokada kamery
+    // Blokada kamery (góra/dół)
     pitch = std::clamp(pitch, -89.0f, 89.0f);
 
-    // Koordynaty sferyczne na kartezjańskie
+    // Koordynaty sferyczne na kartezjańskie, by ustawić pozycje kamery
     glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.x  = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y  = sin(glm::radians(pitch));
+    front.z  = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     camFront = glm::normalize(front);
 }
 
+// Odczytywanie shaderów z plików .glsl do obiektu string
 std::string Simulation::readShaderFile(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) {
         std::cerr << "Failed to open shader file: " << path << std::endl;
         return "";
     }
+    // Utwórz stringstream do przetrzymywania zawartości pliku
     std::stringstream ss;
+
+    // Zapisanie zawartości pliku do stringstream
     ss << file.rdbuf();
+
+    // Konwersja stringstream na normalny string
     return ss.str();
 }
 
 // Kompilacja shadera
 GLuint Simulation::compileShader(GLenum type, const char* src) {
+    // Stwórz nowy obiekt shadera danego typu (GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, etc.)
     GLuint shader = glCreateShader(type);
+
+    // Przypisuje kod źródłowy do obiektu shadera
+    // Parametry: obiekt shadera, liczba ciągów, wskaźnik do ciągu, wskaźnik do długości ciągu (nullptr = zakończony znakiem null)
     glShaderSource(shader, 1, &src, nullptr);
+
+    // Kompilacja shadera
     glCompileShader(shader);
+
     GLint success;
+    // Pobiera status kompilacji shadera
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
+    // Jeśli kompilacja się nie powiodła, wyświetla log błędów
     if (!success) {
-        char info[512];
-        glGetShaderInfoLog(shader, 512, nullptr, info);
-        std::cerr << "Shader compile error: " << info << std::endl;
+        char info[512]; // Bufor do przechowywania komunikatu o błędzie
+        glGetShaderInfoLog(shader, 512, nullptr, info); // Pobiera log błędów
+        std::cerr << "Błąd kompilacji shadera: " << info << std::endl;
     }
 
     return shader;
 }
 
-// Tworzenie shaderprogramu z shadera
+// Funkcja tworząca program shaderów z vertex i fragment shadera
 GLuint Simulation::createShaderProgram() {
+    // Wczytuje kod źródłowy vertex shadera z pliku
     std::string vertexSrcStr = readShaderFile(shader_path + "vertex_shader.glsl");
+    // Wczytuje kod źródłowy fragment shadera z pliku
     std::string fragmentSrcStr = readShaderFile(shader_path + "fragment_shader.glsl");
 
+    // Kompiluje vertex shader
     GLuint vertex = compileShader(GL_VERTEX_SHADER, vertexSrcStr.c_str());
+    // Kompiluje fragment shader
     GLuint fragment = compileShader(GL_FRAGMENT_SHADER, fragmentSrcStr.c_str());
+
+    // Tworzy nowy program shaderów
     GLuint program = glCreateProgram();
 
+    // Przypina vertex i fragment shadery do programu
     glAttachShader(program, vertex);
     glAttachShader(program, fragment);
+
+    // Linkuje shadery w jeden program
     glLinkProgram(program);
 
+    // Sprawdza, czy linkowanie się powiodło
     GLint success;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
 
-    if (!success) std::cerr << "Program link failed\n";
+    if (!success) std::cerr << "Linkowanie programu nie powiodło się\n";
 
+    // Po połączeniu programu shadery można usunąć z pamięci GPU
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
     return program;
 }
 
-// Zładowanie prostego pliku .obj
+// Załadowanie prostego pliku .obj
 bool Simulation::loadObj(const std::string& path) {
+    // Struktura do przechowywania współrzędnych wierzchołków, wektorów normalnych i texcoords
     tinyobj::attrib_t attrib;
+
+    // Wektory przechowujące kształty (mesh) i materiały z pliku OBJ
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
+
+    // Ostrzeżenia
     std::string warn, err;
 
+    // Wczytywanie pliku
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str());
     if (!ret) {
         std::cerr << "OBJ load error: " << warn << err << std::endl;
@@ -149,6 +176,8 @@ bool Simulation::loadObj(const std::string& path) {
     }
 
     for (const auto& shape : shapes) {
+
+        // Iteracja po wszystkich indeksach w mesh (trójkątach)
         for (const auto& idx : shape.mesh.indices) {
             // Każdy - idx - posiada:
             //      vertex_index -> index w attrib.vertices
@@ -169,43 +198,42 @@ bool Simulation::loadObj(const std::string& path) {
 
 // Initializacja SDL3, Glad (opengl), shaderów i załadowanie pliku Propeller.obj
 bool Simulation::Init() {
-    // Initializacja SDL3 by zarządzać oknem
+    // Initializacja SDL3
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "SDL init failed: " << SDL_GetError() << std::endl;
         return -1;
     }
 
-    // Tworzenie obiektu okna oraz kontekstu OpenGL, by potem móc za jego pomocą renderować 
+    // Tworzenie okna SDL z kontekstem OpenGL
     mWindow = SDL_CreateWindow(window_name.c_str(), SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
     glContext = SDL_GL_CreateContext(mWindow);
 
-    // Sprawdzanie czy jest załadowana biblioteka Glad
+    // Inicjalizacja biblioteki GLAD do obsługi funkcji OpenGL
     if (!gladLoadGL()) { std::cerr << "Failed to init GLAD\n"; return -1; }
 
     glEnable(GL_DEPTH_TEST);
 
-    // Załadowanie modelu
+    // Wczytanie modelu z pliku OBJ
     if (!loadObj(model_path)) return -1;
 
-    // Funkcja niepotrzebna poniewarz został zaimplementowna klasa Timer
-    //SDL_GL_SetSwapInterval(1); // V-sync
+    // Funkcja niepotrzebna ponieważ została zaimplementowna klasa Timer
+    // SDL_GL_SetSwapInterval(1); // V-sync
 
-    // Mysz w trybie 'capture'
-    SDL_SetWindowRelativeMouseMode(mWindow, true);
-
-    // Initializacja buferów/tablic na wierzchołki, wektory jednostkowe
+    // Tworzenie i wiązanie Vertex Array Object (VAO)
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
+    // Tworzenie Vertex Buffer Object (VBO) dla wierzchołków
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
 
+    // Tworzenie Vertex Buffer Object (NBO) dla wektorów normalnych
     glGenBuffers(1, &NBO);
     glBindBuffer(GL_ARRAY_BUFFER, NBO);
-    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(float), normals.data(),GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(float), normals.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(1);
 
@@ -213,29 +241,48 @@ bool Simulation::Init() {
     shaderProgram = createShaderProgram();
     glUseProgram(shaderProgram);
 
-    modelLoc      = glGetUniformLocation(shaderProgram, "model"); 
-    viewLoc       = glGetUniformLocation(shaderProgram, "view"); 
-    projLoc       = glGetUniformLocation(shaderProgram, "projection"); 
-    objColorLoc   = glGetUniformLocation(shaderProgram, "objectColor"); 
-    lightPosLoc   = glGetUniformLocation(shaderProgram, "lightPos"); 
-    lightColorLoc = glGetUniformLocation(shaderProgram, "lightColor"); 
+    // Pobranie informacji z shaderów
+    modelLoc        = glGetUniformLocation(shaderProgram, "model"); 
+    viewLoc         = glGetUniformLocation(shaderProgram, "view"); 
+    projLoc         = glGetUniformLocation(shaderProgram, "projection"); 
+    objColorLoc     = glGetUniformLocation(shaderProgram, "objectColor"); 
+    lightPosLoc     = glGetUniformLocation(shaderProgram, "lightPos"); 
+    lightColorLoc   = glGetUniformLocation(shaderProgram, "lightColor"); 
+    lightPos2Loc    = glGetUniformLocation(shaderProgram, "lightPos2"); 
+    lightColor2Loc  = glGetUniformLocation(shaderProgram, "lightColor2"); 
 
-    // Zmiana odpowiednio koloru śmigła, pozycji światła i kolor światła
+    // Ustawienie koloru obiektu (szare)
     glUniform3f(objColorLoc, 0.5f, 0.5f, 0.5f); 
+
+    // Ustawienie pozycji i koloru pierwszego światła
     glUniform3f(lightPosLoc, 0.0f, 0.0f, 3.0f); 
     glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); 
 
+    // Ustawienie pozycji i koloru drugiego światła
+    glUniform3f(lightPos2Loc, 0.0f, 0.0f, -3.0f); 
+    glUniform3f(lightColor2Loc, 1.0f, 1.0f, 1.0f); 
+
+    // Tworzenie macierzy projekcji perspektywy
     // Jeśli chcemy zmieniać rozmiar okna, przenieść tą funckję do Update
     projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, &projection[0][0]);
-    return 1;
+
+
+    return true;
 }
 
 
 void Simulation::EarlyUpdate() {
-    // Aktualizacja wejścia z myszy i klawiatury
-    SDL_GetRelativeMouseState(&xrel,&yrel);
-    mouseMovement(xrel,yrel);
+    // Aktualizacja danych wejsciowych z myszy i klawiatury
+
+    // Mysz w trybie 'capture'
+    SDL_SetWindowRelativeMouseMode(mWindow, mouseCapture);
+
+    // Przełączenie trybu 'capture'
+    if (mouseCapture) {
+        SDL_GetRelativeMouseState(&xrel,&yrel);
+        mouseMovement(xrel,yrel);
+    }
     processInput();
 }
 
@@ -257,41 +304,60 @@ void Simulation::LateUpdate() {
 }
 
 void Simulation::Render() {
+    // Czyści bufor kolorów i bufor głębokości
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Ustawia kolor tła na czarny (RGBA)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+    // Przekazuje do shadera macierz modelu (transformacja obiektu w świecie)
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
 
-    // Jak sama nazwa sugeruje ta transformacja pozwala nam zauktualizować wektor, w którym kierunku "patrzymy"
+    // Tworzy macierz widoku (kamera)
+    // glm::lookAt ustawia pozycję kamery, kierunek patrzenia i wektor "up"
     glm::mat4 view = glm::lookAt(camPos, camPos+camFront, camUp);
+
+    // Przekazuje macierz widoku do shadera
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
 
+    // Rysuje wierzchołki jako trójkąty
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 
+    // Zamień bufor, aby wyświetlić aktualną zawartość bufora na ekranie. 
     SDL_GL_SwapWindow(mWindow);
 }
 
 // Główna pętla
 void Simulation::Run() {
     while (running) {
+
+        // Aktualizowanie deltaTime
         mTimer.Update();
+
         while (SDL_PollEvent(&mEvents)) {
             if (mEvents.type == SDL_EVENT_QUIT) 
                 running = false;
 
+            // Wykrycie naciśnięcia przycisku klawiatury
             if (mEvents.type == SDL_EVENT_KEY_DOWN) {
                 keys[mEvents.key.scancode] = true;
 
                 // Sprawdzenie klawisza ESC
                 if (mEvents.key.scancode == SDL_SCANCODE_ESCAPE)
                     running = false;
+
+                // Zminana trybu myszy za pomocą Q
+                if (mEvents.key.scancode == SDL_SCANCODE_Q)
+                    mouseCapture = !mouseCapture;
             }
 
             if (mEvents.type == SDL_EVENT_KEY_UP) 
                 keys[mEvents.key.scancode] = false;
+
         }
 
+        // Upewnienie się, że program będzie działał w danym zarkresie FPS
         if (mTimer.DeltaTime() >= (1.0f / FRAME_RATE)) {
             EarlyUpdate();
             Update();
