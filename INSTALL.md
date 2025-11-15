@@ -1,9 +1,9 @@
 ## Instalacja
 
 Ten projekt wymaga wielu bibliotek, z których część dla wygody postarałem się uwzględnić już w samym projekcie m.in:
- - Glad &emsp; &emsp;-- (Załadować nagłówków OpenGL)
- - GLM &emsp; &emsp;-- (Biblioteka matematyczna OpenGL)
- - tiny_object_loader.h -- (Załadowywaniu modeli o rozszerzeniu .obj)
+ - Glad (Załadować nagłówków OpenGL)
+ - GLM (Biblioteka matematyczna OpenGL)
+ - tiny_object_loader.h (Załadowywaniu modeli o rozszerzeniu .obj)
 
 Jedank pozostaje jedna biblioteka, która sprawia niemałe trudności SDL3. Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla systemów Windows i Linux:
 
