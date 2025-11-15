@@ -8,10 +8,6 @@
 //            g++ src/*.cpp src/*.c -Iinclude -L/usr/local/lib -o turbine -lSDL3 -lGL 
 //            ./turbine
 //-------------------------------------------------------
-// JAK COŚ SIĘ SPIERDOLI!!: 
-//            g++ -g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer src/*.cpp src/*.c -Iinclude -L/usr/local/lib -o turbine -lSDL3 -lGL  
-//            ./turbine                   
-//-------------------------------------------------------
 
 #include "Simulation.hpp"
 
@@ -23,4 +19,5 @@ int main(int argc, char** argv) {
     sim.Run();
 
     return 0;
+
 }
