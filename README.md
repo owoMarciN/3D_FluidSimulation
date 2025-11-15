@@ -29,7 +29,7 @@ Implementcja prostej symulacji [Fluid Simulation For Dummies](https://www.mikeas
 - [ ] Renderowanie pól wektoryowych prędkości
 - [ ] Zaznaczanie komórek siatki wokół obiektu
 - [ ] Symulacja przepływu w rurze
-- [ ] Interakcja ciecz-model_3D, ciecz-grawitacja
+- [ ] Interakcja ```ciecz-model_3D```, ```ciecz-grawitacja```
 
 ### Faza 2: Kawitacja
 - [ ] Implementacja pola ciśnienia
