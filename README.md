@@ -6,3 +6,12 @@ Jak na razie w porjekcie zostały użyte następujace biblioteki:
 - ```GLM```  (Matematyka OpenGL)
 - ```SDL3``` (Zarządzanie wejściem/wyjściem oraz tworzenie okna)
 - ```tiny_object_loader``` (Załadowanie plików modeli 3D o rozszerzeniu .obj)
+
+Faza 0: Rozpoczecie pracy
+- [] Tworzenie okna za pomocą SDL3
+- [] Klasa Simulation
+- [] Klasa Timer
+- [] Załadowanie obiektu 3D z Blendera za pomocą ```tiny_object_loader```
+- [] Wyrenderowanie załadowanego obiektu 3D
+- [] Ruch kamery w oknie symulacji
+
