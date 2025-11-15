@@ -1,7 +1,7 @@
 ## Instalacja
 
 Ten projekt wymaga wielu bibliotek, z których część dla wygody postarałem się uwzględnić już w samym projekcie m.in:
-- ```Glad``` (Nagłówków OpenGL),
+- ```Glad``` (Nagłówki OpenGL),
 - ```GLM``` (Matematyka OpenGL),
 - ```tiny_object_loader.h``` (Załadowywanie plików modeli 3D o rozszerzeniu .obj).
 
