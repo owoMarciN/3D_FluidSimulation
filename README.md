@@ -7,6 +7,8 @@ Jak na razie w porjekcie zostały użyte następujace biblioteki:
 - ```SDL3``` (Zarządzanie wejściem/wyjściem oraz tworzenie okna)
 - ```tiny_object_loader``` (Załadowanie plików modeli 3D o rozszerzeniu .obj)
 
+## RoadMap
+
 Faza 0: Rozpoczecie pracy
 - [] Tworzenie okna za pomocą SDL3
 - [] Klasa Simulation
