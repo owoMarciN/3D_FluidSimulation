@@ -9,7 +9,7 @@ Jedank pozostaje jedna biblioteka, która sprawia niemałe trudności SDL3. Poni
 
 ## Windows -- MSYS2 UCRT64
 
-1. Pobierz MSYS2: https://www.msys2.org/ \n
+1. Pobierz MSYS2: https://www.msys2.org/ \
    Miej na uwadze, że na Windowsie ścieżki do bibliotek mogą różnić się w zależności od instalacji MSYS2
 
 2. W swoim systemie wyszukaj „UCRT64” i uruchom w trybie administratora.
