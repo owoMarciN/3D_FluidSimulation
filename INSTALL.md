@@ -28,11 +28,14 @@ Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla system�
 	pacman -S mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-sdl3
 ```
 
-5. Skompiluj projektu (przykład dla pulpitu):
+5. Skompiluj projekt:
 
 ```bash
+	#Sklonuj repo
+	git clone https://github.com/owoMarciN/3D_FluidSimulation.git
+
 	#Przejdź do folderu
-	cd ~/Desktop/3D_FluidSimulation-main
+	cd 3D_FluidSimulation
 
 	#Skompiluj projekt
 	g++ src/*.cpp src/*c -Iinclude -L/ucrt64/lib -o turbine -lSDL3 -lopengl32
@@ -82,8 +85,11 @@ Zastosuj zmiany:
 4. Skompiluj projekt (przykład dla pulpitu):
 
 ```bash
+	#Sklonuj repo
+	git clone https://github.com/owoMarciN/3D_FluidSimulation.git
+
 	#Przejdź do folderu
-	cd ~/Desktop/3D_FluidSimulation-main
+	cd 3D_FluidSimulation
 
 	#Skompiluj projekt
 	g++ src/*.cpp src/*.c -Iinclude -L/usr/local/lib -o turbine -lSDL3 -lGL
