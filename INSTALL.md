@@ -51,22 +51,19 @@ Jedank pozostaje jedna biblioteka, która sprawia niemałe trudności SDL3. Poni
 ```bash
 	mkdir build
 	cd build
-```
 
-3. Skompiluj i zainstaluj:
-
-```bash
+	#Skompiluj i zainstaluj:
 	cmake .. -DCMAKE_BUILD_TYPE=Release
 	cmake --build . --config Release
 	sudo cmake --install . --config Release
 ```
 
-4. Dodaj ścieżkę do bibliotek do zmiennej LD_LIBRARY_PATH:
+3. Dodaj ścieżkę do bibliotek do zmiennej LD_LIBRARY_PATH:
 
 ```bash
 	nano ~/.bashrc
 ```
-Wpisz na końcu:
+Wpisz na końcu pliku:
 
 ```bash
 	export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
@@ -80,7 +77,7 @@ Zastosuj zmiany:
 	sudo ldconfig
 ```
 
-5. Skompiluj projekt (przykład dla pulpitu):
+4. Skompiluj projekt (przykład dla pulpitu):
 
 ```bash
 	cd ~/Desktop/3D_FluidSimulation-main
