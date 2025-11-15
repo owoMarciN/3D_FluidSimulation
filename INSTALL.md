@@ -1,7 +1,7 @@
 ## Instalacja
 
 Ten projekt wymaga wielu bibliotek, z których część dla wygody postarałem się uwzględnić już w samym projekcie m.in:
- - Glad /t/t	-- (Załadować nagłówków OpenGL)
+ - Glad \t\t	-- (Załadować nagłówków OpenGL)
  - GLM /t/t-- (Biblioteka matematyczna OpenGL)
  - tiny_object_loader.h -- (Załadowywaniu modeli o rozszerzeniu .obj)
 
