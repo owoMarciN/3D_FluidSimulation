@@ -3,7 +3,7 @@
 Ten projekt wymaga wielu bibliotek, z których część dla wygody postarałem się uwzględnić już w samym projekcie m.in:
 - Glad (Nagłówków OpenGL),
 - GLM (Matematyka OpenGL),
-- tiny_object_loader.h (Załadowywanie modeli o rozszerzeniu .obj).
+- tiny_object_loader.h (Załadowywanie pliów modeli 3D o rozszerzeniu .obj).
 
 Jedank pozostaje jedna biblioteka, która sprawia niemałe trudności -- SDL3. \
 Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla systemów Windows i Linux.
