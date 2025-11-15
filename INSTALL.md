@@ -11,7 +11,7 @@ Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla system�
 ## Windows -- MSYS2 UCRT64
 
 1. Pobierz MSYS2(*): https://www.msys2.org/ \
-   * Głównie dla wygody by móc kompilowac za pomocą gcc/g++ na Windowsie \
+   \* Głównie dla wygody by móc kompilowac za pomocą gcc/g++ na Windowsie \
    Miej na uwadze, że na Windowsie ścieżki do bibliotek mogą różnić się w zależności od instalacji MSYS2
 
 3. W swoim systemie wyszukaj „UCRT64” i uruchom w trybie administratora.
