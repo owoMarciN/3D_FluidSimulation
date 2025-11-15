@@ -15,6 +15,8 @@ class Simulation {
             return sInstance;
         }
 
+    private:
+        
         SDL_Window *mWindow;
         SDL_GLContext glContext;
         std::string window_name;
@@ -33,6 +35,7 @@ class Simulation {
 
         float xrel, yrel;
         float cameraSpeed;
+        bool mouseCapture;
 
         float yaw;
         float pitch;
@@ -53,10 +56,14 @@ class Simulation {
         GLint objColorLoc;
         GLint lightPosLoc;
         GLint lightColorLoc;
+        GLint lightPos2Loc;
+        GLint lightColor2Loc;
 
         GLuint VAO, VBO, NBO;
         glm::mat4 model;
         glm::mat4 projection;
+
+    public:
 
         void Run();
         bool Init();
