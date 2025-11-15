@@ -38,10 +38,10 @@ Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla system�
 	g++ src/*.cpp src/*c -Iinclude -L/ucrt64/lib -o turbine -lSDL3 -lopengl32
 
 	#Przekopiuj SDL3.dll obok pliku .exe
-	cp /ucrt64/bin/SDL3.dll build/
+	cp /ucrt64/bin/SDL3.dll .
 
 	#Uruchom
-	./build/turbine.exe
+	./turbine.exe
 ```
 
 ## Linux
