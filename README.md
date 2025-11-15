@@ -9,11 +9,45 @@ Jak na razie w porjekcie zostały użyte następujace biblioteki:
 
 ## RoadMap
 
-Faza 0: Rozpoczecie pracy
-- [] Tworzenie okna za pomocą SDL3
-- [] Klasa Simulation
-- [] Klasa Timer
-- [] Załadowanie obiektu 3D z Blendera za pomocą ```tiny_object_loader```
-- [] Wyrenderowanie załadowanego obiektu 3D
-- [] Ruch kamery w oknie symulacji
+### Faza 0: Rozpoczecie pracy
+- [x] Tworzenie okna za pomocą biblioteki SDL3
+- [x] Klasa ```Simulation```
+- [x] Klasa ```Timer```
+- [x] Załadowanie obiektu 3D z Blendera za pomocą ```tiny_object_loader```
+- [x] Wyrenderowanie załadowanego obiektu 3D
+- [x] Odczytywnie shaderów z plików ```.glsl```
+- [x] Kompilacja shaderów
+- [x] Ruch kamery w oknie symulacji
+- [x] Obrót obiektu wokół osi
+- [x] Wskaźnik FPS
+- [ ] Komentarze i opis funkcji
+
+### Faza 1: Stworzenie rozwiązania dla symulacji (
+Implementcja prostej symulacji [Fluid Simulation For Dummies](https://www.mikeash.com/pyblog/fluid-simulation-for-dummies.html)
+- [x] Stworzenie klasy ```FluidCube```
+- [ ] Renderowanie gęstości "barwnika"
+- [ ] Renderowanie pól wektoryowych prędkości
+- [ ] Zaznaczanie komórek siatki wokół obiektu
+- [ ] Symulacja przepływu w rurze
+- [ ] Interakcja ciecz-model_3D, ciecz-grawitacja
+
+### Faza 2: Kawitacja
+- [ ] Implementacja pola ciśnienia
+- [ ] Dodanie ułamka pary alpha
+- [ ] Obliczenie lokalnych minimów ciśnienia
+- [ ] Identyfikacja stref niskiego ciśnienia
+- [ ] Renderowanie stref w wyróżniających się kolorach
+
+### Faza 3: Rayleigh–Plesset i bąbelki
+- [ ] Implementacja klasy Bubbles
+- [ ] Integracja równania RP metodą Eulera implicite
+- [ ] Interpolacja ciśnienia z siatki do cząstek
+- [ ] Test rozrostu bąbelków w strefie niskiego ciśnienia
+
+### Faza 4: Babęlki oddziałujące na przepływu
+
+Ciąg dalszy nastąpi...
+
+
+
 
