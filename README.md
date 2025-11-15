@@ -38,13 +38,13 @@ Implementcja prostej symulacji [Fluid Simulation For Dummies](https://www.mikeas
 - [ ] Identyfikacja stref niskiego ciśnienia
 - [ ] Renderowanie stref w wyróżniających się kolorach
 
-### Faza 3: Rayleigh–Plesset i bąbelki
+### Faza 3: Rayleigh–Plesset i Bąbelki
 - [ ] Implementacja klasy ```Bubbles```
 - [ ] Integracja równania RP metodą ```Eulera```
 - [ ] Interpolacja ciśnienia z siatki do cząstek
 - [ ] Test rozrostu bąbelków w strefie niskiego ciśnienia
 
-### Faza 4: Babęlki oddziałujące na przepływu
+### Faza 4: Babęlki oddziałujące na przepływ
 
 Ciąg dalszy nastąpi...
 
