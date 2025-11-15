@@ -30,16 +30,16 @@ Jedank pozostaje jedna biblioteka, która sprawia niemałe trudności SDL3. Poni
 5. Przejdź do folderu projektu (przykład dla pulpitu):
 
 ```bash
-	// 	Przejdź do folderu
+	#Przejdź do folderu
 	cd ~/Desktop/FluidSimulation
 
-	//	Skompiluj projekt
+	#Skompiluj projekt
 	g++ src/*.cpp src/*c -Iinclude -L/ucrt64/lib -o turbine -lSDL3 -lopengl32
 
-	//	Przekopiuj SDL3.dll obok pliku .exe
+	#Przekopiuj SDL3.dll obok pliku .exe
 	cp /ucrt64/bin/SDL3.dll build/
 
-	//	Uruchom
+	#Uruchom
 	./build/turbine.exe
 ```
 
