@@ -44,7 +44,7 @@ Jedank pozostaje jedna biblioteka, która sprawia niemałe trudności SDL3. Poni
 
 ## Linux
 
-1. Pobierz i rozpakuj SDL3: https://github.com/libsdl-org/SDL/releases
+1. Pobierz i rozpakuj "SourceCode.zip": https://github.com/libsdl-org/SDL/releases
 
 2. Wejdź do folderu SDL3 i utwórz folder build:
 
