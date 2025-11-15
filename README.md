@@ -19,13 +19,13 @@ Jak na razie w porjekcie zostały użyte następujace biblioteki:
 - [x] Kompilacja shaderów
 - [x] Ruch kamery w oknie symulacji
 - [x] Obrót obiektu wokół osi
-- [x] Wskaźnik FPS
+- [x] Wskaźnik ```FPS```
 - [ ] Komentarze i opis funkcji
 
 ### Faza 1: Stworzenie rozwiązania dla symulacji (
 Implementcja prostej symulacji [Fluid Simulation For Dummies](https://www.mikeash.com/pyblog/fluid-simulation-for-dummies.html)
 - [x] Stworzenie klasy ```FluidCube```
-- [ ] Renderowanie gęstości "barwnika"
+- [ ] Renderowanie gęstości ```barwnika```
 - [ ] Renderowanie pól wektoryowych prędkości
 - [ ] Zaznaczanie komórek siatki wokół obiektu
 - [ ] Symulacja przepływu w rurze
@@ -39,8 +39,8 @@ Implementcja prostej symulacji [Fluid Simulation For Dummies](https://www.mikeas
 - [ ] Renderowanie stref w wyróżniających się kolorach
 
 ### Faza 3: Rayleigh–Plesset i bąbelki
-- [ ] Implementacja klasy Bubbles
-- [ ] Integracja równania RP metodą Eulera implicite
+- [ ] Implementacja klasy ```Bubbles```
+- [ ] Integracja równania RP metodą ```Eulera```
 - [ ] Interpolacja ciśnienia z siatki do cząstek
 - [ ] Test rozrostu bąbelków w strefie niskiego ciśnienia
 
