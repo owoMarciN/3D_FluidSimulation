@@ -10,11 +10,11 @@ Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla system�
 
 ## Windows -- MSYS2 UCRT64
 
-1. Pobierz MSYS2: https://www.msys2.org/
+1. Pobierz ```MSYS2```: https://www.msys2.org/
 	- **Głównie dla wygody oraz by móc kompilować za pomocą gcc/g++ na Windowsie.**
 	- **Miej na uwadze, że na Windowsie ścieżki do bibliotek mogą różnić się w zależności od instalacji MSYS2.**
 
-3. W swoim systemie wyszukaj „UCRT64” i uruchom w trybie administratora.
+3. W swoim systemie wyszukaj ```UCRT64``` i uruchom w trybie administratora.
 
 4. Zaktualizuj za pomocą:
 
@@ -22,7 +22,7 @@ Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla system�
 	pacman -Syu
 ```
 
-4. Po restarcie zainstaluj potrzebne narzędzia i SDL3:
+4. Po restarcie zainstaluj potrzebne narzędzia i ```SDL3```:
 
 ```bash
 	pacman -S mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-sdl3
@@ -46,9 +46,9 @@ Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla system�
 
 ## Linux
 
-1. Pobierz i rozpakuj "SourceCode.zip": https://github.com/libsdl-org/SDL/releases
+1. Pobierz i rozpakuj ```SourceCode.zip```: https://github.com/libsdl-org/SDL/releases
 
-2. Wejdź do folderu SDL3 i utwórz folder build:
+2. Wejdź do folderu ```SDL3-*``` i utwórz folder build:
 
 ```bash
 	mkdir build
@@ -60,7 +60,7 @@ Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla system�
 	sudo cmake --install . --config Release
 ```
 
-3. Dodaj ścieżkę do bibliotek do zmiennej LD_LIBRARY_PATH:
+3. Dodaj ścieżkę do bibliotek do zmiennej ```LD_LIBRARY_PATH```:
 
 ```bash
 	nano ~/.bashrc
