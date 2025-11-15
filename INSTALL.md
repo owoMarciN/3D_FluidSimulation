@@ -1,17 +1,17 @@
 ## Instalacja
 
 Ten projekt wymaga wielu bibliotek, z których część dla wygody postarałem się uwzględnić już w samym projekcie m.in:
- - Glad (Nagłówków OpenGL),
- - GLM (Matematyka OpenGL),
- - tiny_object_loader.h (Załadowywanie modeli o rozszerzeniu .obj).
+- Glad (Nagłówków OpenGL),
+- GLM (Matematyka OpenGL),
+- tiny_object_loader.h (Załadowywanie modeli o rozszerzeniu .obj).
 
 Jedank pozostaje jedna biblioteka, która sprawia niemałe trudności -- SDL3. \
 Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla systemów Windows i Linux.
 
 ## Windows -- MSYS2 UCRT64
 
-1. Pobierz MSYS2: https://www.msys2.org/ \
-	- **Głównie dla wygody by móc kompilować za pomocą gcc/g++ na Windowsie.**\
+1. Pobierz MSYS2: https://www.msys2.org/
+	- **Głównie dla wygody by móc kompilować za pomocą gcc/g++ na Windowsie.**
 	- **Miej na uwadze, że na Windowsie ścieżki do bibliotek mogą różnić się w zależności od instalacji MSYS2.**
 
 3. W swoim systemie wyszukaj „UCRT64” i uruchom w trybie administratora.
