@@ -1,9 +1,9 @@
 ## Instalacja
 
 Ten projekt wymaga wielu bibliotek, z których część dla wygody postarałem się uwzględnić już w samym projekcie m.in:
-	Glad
-	GLM
-	tiny_object_loader.h 
+ - Glad
+ - GLM
+ - tiny_object_loader.h 
 
 Jedank pozostaje jedna biblioteka, która sprawia niemałe trudności SDL3. Poniżej spróbuję opisać jak przeszedłem przez proces instalacji dla systemów Windows i Linux:
 
