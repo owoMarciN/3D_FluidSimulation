@@ -73,20 +73,24 @@ Zastosuj zmiany:
 ```bash
 	source ~/.bashrc
 
-	#By się upewnić
+	#Aby się upewnić
 	sudo ldconfig
 ```
 
 4. Skompiluj projekt (przykład dla pulpitu):
 
 ```bash
+	#Przejdź do folderu
 	cd ~/Desktop/3D_FluidSimulation-main
 
+	#Skompiluj projekt
 	g++ src/*.cpp src/*.c -Iinclude -L/usr/local/lib -o turbine -lSDL3 -lGL
 
+	#Uruchom
 	./turbine
 ```
 
+	
 
 
 
