@@ -16,20 +16,20 @@ Jedank pozostaje jedna biblioteka, która sprawia niemałe trudności SDL3. Poni
 
 3. Zaktualizuj za pomocą:
 
-'''bash
+```bash
 	pacman -Syu
-'''
+```
 
 4. Po restarcie zainstaluj potrzebne narzędzia i SDL3:
 
-'''bash
+```bash
 	pacman -S mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-sdl3
-'''
+```
 
 
 5. Przejdź do folderu projektu (przykład dla pulpitu):
 
-'''bash
+```bash
 	// 	Przejdź do folderu
 	cd ~/Desktop/FluidSimulation
 
@@ -41,7 +41,7 @@ Jedank pozostaje jedna biblioteka, która sprawia niemałe trudności SDL3. Poni
 
 	//	Uruchom
 	./build/turbine.exe
-'''
+```
 
 ## Linux
 
