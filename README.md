@@ -1,4 +1,4 @@
-# 3D_FluidSimulation
+# 3D Fluid Simulation
 3D fluid simulation using SDL3 + OpenGL libraries
 
 ## Phase 1 — Fuid solver
