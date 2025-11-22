@@ -78,7 +78,7 @@ Zastosuj zmiany:
 ```bash
 	source ~/.bashrc
 
-	#Aby się upewnić
+	#Aktualizacja linków do bibliotek
 	sudo ldconfig
 ```
 
