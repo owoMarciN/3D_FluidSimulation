@@ -24,6 +24,7 @@ Simulation::Simulation(): mTimer(Timer::Instance()) {
     // Mysz
     cameraSpeed  = 0.05f;
     mouseCapture = true;
+    wasCaptured = false;
 
     // Rotacje modelu
     yaw   = -90.0f;
@@ -271,18 +272,32 @@ bool Simulation::Init() {
     return true;
 }
 
-
 void Simulation::EarlyUpdate() {
-    // Aktualizacja danych wejsciowych z myszy i klawiatury
-
-    // Mysz w trybie 'capture'
-    SDL_SetWindowRelativeMouseMode(mWindow, mouseCapture);
-
-    // Przełączenie trybu 'capture'
-    if (mouseCapture) {
-        SDL_GetRelativeMouseState(&xrel,&yrel);
-        mouseMovement(xrel,yrel);
+    // Ogarniamy zmiany trybu 'capture'
+    if (mouseCapture != wasCaptured) {
+        if (mouseCapture) {
+            // Zapamiętaj pozycję
+            SDL_GetMouseState(&prevX, &prevY);
+            // Ukryj kursor
+            SDL_SetWindowRelativeMouseMode(mWindow, true);
+            SDL_GetRelativeMouseState(&xrel, &yrel);
+        } 
+        else {
+            // Pokaż kursor
+            SDL_SetWindowRelativeMouseMode(mWindow, false);
+            // Przywraca poprzednie współrzędne
+            SDL_WarpMouseInWindow(mWindow, prevX, prevY);
+        }
+        wasCaptured = mouseCapture;
     }
+
+    // Jeśli jesteśmy w trybie 'capture' 
+    if (mouseCapture) {
+        // Aktualizacja myszy
+        SDL_GetRelativeMouseState(&xrel, &yrel);
+        mouseMovement(xrel, yrel);
+    }
+
     processInput();
 }
 

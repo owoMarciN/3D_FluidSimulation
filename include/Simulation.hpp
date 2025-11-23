@@ -33,9 +33,13 @@ class Simulation {
         glm::vec3 camFront;
         glm::vec3 camUp;
 
-        float xrel, yrel;
+        float prevX;
+        float prevY;
+        float xrel;
+        float yrel;
         float cameraSpeed;
         bool mouseCapture;
+        bool wasCaptured;
 
         float yaw;
         float pitch;
