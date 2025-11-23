@@ -1,0 +1,6 @@
+# VsCode
+.vscode/
+
+# Executables
+/*.o
+/*.exe
