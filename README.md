@@ -1,5 +1,5 @@
 # 3D Fluid Simulation
-Na razie w początkowej fazie próba zbudowania symulacji cieczy szczególnie kładąc nacisk na zjawisko [kawitacji](https://pl.wikipedia.org/wiki/Kawitacja). Jak na razie udało mi się stworzyć podstawowy program symulacji mogący załadować plik modelu 3D o rozszerzeniu .obj i wyrenderowanie go za pomocą OpenGL. Instrukcja installacji podana jest w [INSTALL.md](https://github.com/owoMarciN/3D_FluidSimulation/blob/79200677ae3ab91757c90aba26efe9b0ff9262e4/INSTALL.md).
+Na razie w początkowej fazie próba zbudowania symulacji cieczy szczególnie kładąc nacisk na zjawisko [kawitacji](https://pl.wikipedia.org/wiki/Kawitacja). Jak na razie udało mi się stworzyć podstawowy program symulacji mogący załadować plik modelu 3D o rozszerzeniu .obj i wyrenderowanie go za pomocą OpenGL. Instrukcja instalacji podana jest w [INSTALL.md](https://github.com/owoMarciN/3D_FluidSimulation/blob/79200677ae3ab91757c90aba26efe9b0ff9262e4/INSTALL.md).
 
 W projekcie zostały użyte następujace biblioteki:
 - ```Glad``` (Nagłówki OpenGL)
