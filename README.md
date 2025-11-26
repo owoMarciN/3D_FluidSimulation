@@ -20,7 +20,6 @@ W projekcie zostały użyte następujace biblioteki:
 - [x] Ruch kamery w oknie symulacji
 - [x] Obrót obiektu wokół osi
 - [x] Wskaźnik ```FPS```
-- [ ] Komentarze i opis funkcji
 
 ### Faza 1: Stworzenie rozwiązania dla symulacji (
 Implementcja prostej symulacji [Fluid Simulation For Dummies](https://www.mikeash.com/pyblog/fluid-simulation-for-dummies.html)
