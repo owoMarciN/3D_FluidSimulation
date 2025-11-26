@@ -1,10 +1,10 @@
-#ifndef FLUID_CUBE_H_
-#define FLUID_CUBE_H_
+#ifndef FLUID_H_
+#define FLUID_H_
 
 #include <cmath>
 #define IX(x, y, z) ((x) + (y) * N + (z) * N * N)
 
-class FluidCube {
+class Fluid {
     public:
         int size;
         float dt;
@@ -23,9 +23,9 @@ class FluidCube {
         float *Vy0;
         float *Vz0;
 
-        FluidCube(int size, float dt, int iter, float diffusion, float viscosity);
+        Fluid(int size, float dt, int iter, float diffusion, float viscosity);
 
-        ~FluidCube();
+        ~Fluid();
 
         void AddDensity(int x, int y, int z, float amount);
 
@@ -41,7 +41,7 @@ class FluidCube {
 
         void advect(int b, float *d, float *d0, float *velX, float *velY, float *velZ, float dt);
             
-        void FluidCubeStep();
+        void FluidStep();
         
         void fadeDensity(float amount);
 };

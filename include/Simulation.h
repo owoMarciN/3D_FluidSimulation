@@ -53,19 +53,30 @@ class Simulation {
         std::vector<float> vertices;
         std::vector<float> normals;
 
-        GLuint shaderProgram;
-        GLint modelLoc;
-        GLint viewLoc;
-        GLint projLoc;
-        GLint objColorLoc;
+        GLuint shaderProgProp;
+        GLint modelLocProp;
+        GLint viewLocProp;
+        GLint projLocProp;
+        GLint objColorLocProp;
         GLint lightPosLoc;
         GLint lightColorLoc;
         GLint lightPos2Loc;
         GLint lightColor2Loc;
 
         GLuint VAO, VBO, NBO;
-        glm::mat4 model;
+        glm::mat4 propModel;
         glm::mat4 projection;
+
+        GLuint shaderProgLine;
+        GLint objColorLocLine;
+        GLint modelLocLine;
+        GLint viewLocLine;
+        GLint projLocLine;
+
+        GLuint lineVAO, lineVBO;
+        glm::mat4 lineModel;
+
+        
 
     public:
 
@@ -79,7 +90,7 @@ class Simulation {
 
         std::string readShaderFile(const std::string& path);
         GLuint compileShader(GLenum type, const char* src);
-        GLuint createShaderProgram();
+        GLuint createShaderProgram(const std::string& vertName, const std::string& fragName);
         bool loadObj(const std::string& path);
 
         void EarlyUpdate();

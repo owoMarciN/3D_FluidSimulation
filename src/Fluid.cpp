@@ -1,6 +1,6 @@
-#include "FluidCube.hpp"
+#include "Fluid.h"
 
-FluidCube::FluidCube(int size, float dt, int iter, float diffusion, float viscosity) {
+Fluid::Fluid(int size, float dt, int iter, float diffusion, float viscosity) {
     int N = size;
     
     this->size = size;
@@ -22,7 +22,7 @@ FluidCube::FluidCube(int size, float dt, int iter, float diffusion, float viscos
     this->Vz0 = new float[total_size];
 }
 
-FluidCube::~FluidCube() {
+Fluid::~Fluid() {
     delete[] s;
     delete[] density;
 
@@ -35,7 +35,7 @@ FluidCube::~FluidCube() {
     delete[] Vz0;
 }
 
-void FluidCube::set_bounds(int b, float *x) {
+void Fluid::set_bounds(int b, float *x) {
     int N = this->size;
     for(int j = 1; j < N - 1; j++) {
         for(int i = 1; i < N - 1; i++) {
@@ -82,7 +82,7 @@ void FluidCube::set_bounds(int b, float *x) {
                                   + x[IX(N-1, N-1, N-2)]);
 }
 
-void FluidCube::lin_solve(int b, float *x, float *x0, float a, float c) {
+void Fluid::lin_solve(int b, float *x, float *x0, float a, float c) {
     int N = this->size;
 
     float cRecip = 1.0f / c;
@@ -106,15 +106,13 @@ void FluidCube::lin_solve(int b, float *x, float *x0, float a, float c) {
     }
 }
 
-void FluidCube::diffuse(int b, float *x, float *x0, float diff, float dt)
-{
+void Fluid::diffuse(int b, float *x, float *x0, float diff, float dt) {
     int N = this->size;
     float a = dt * diff * (N - 2) * (N - 2);
     this->lin_solve(b, x, x0, a, 1 + 6 * a);
 }
 
-void FluidCube::advect(int b, float *d, float *d0,  float *velocX, float *velocY, float *velocZ, float dt)
-{
+void Fluid::advect(int b, float *d, float *d0,  float *velocX, float *velocY, float *velocZ, float dt) {
     int N = this->size;
     float i0, i1, j0, j1, k0, k1;
     
@@ -182,8 +180,7 @@ void FluidCube::advect(int b, float *d, float *d0,  float *velocX, float *velocY
     set_bounds(b, d);
 }
 
-void  FluidCube::project(float *velX, float *velY, float *velZ, float *p, float *div)
-{
+void  Fluid::project(float *velX, float *velY, float *velZ, float *p, float *div) {
     int N = this->size;
     for (int k = 1; k < N - 1; k++) {
         for (int j = 1; j < N - 1; j++) {
@@ -222,7 +219,7 @@ void  FluidCube::project(float *velX, float *velY, float *velZ, float *p, float 
     set_bounds(3, velZ);
 }
 
-void FluidCube::FluidCubeStep(){
+void Fluid::FluidStep() {
     this->diffuse(1, this->Vx0, this->Vx, this->visc, this->dt);
     this->diffuse(2, this->Vy0, this->Vy, this->visc, this->dt);
     this->diffuse(3, this->Vz0, this->Vz, this->visc, this->dt);
@@ -240,14 +237,12 @@ void FluidCube::FluidCubeStep(){
 
 }
 
-void FluidCube::AddDensity(int x, int y, int z, float amount)
-{
+void Fluid::AddDensity(int x, int y, int z, float amount) {
     int N = this->size;
     this->density[IX(x, y, z)] += amount;
 }
 
-void FluidCube::AddVelocity(int x, int y, int z, float amountX, float amountY, float amountZ)
-{
+void Fluid::AddVelocity(int x, int y, int z, float amountX, float amountY, float amountZ) {
     int N = this->size;
     int index = IX(x, y, z);
     

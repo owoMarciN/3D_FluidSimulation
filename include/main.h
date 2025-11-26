@@ -19,7 +19,7 @@
 #include <cassert>
 #include <cstring>
 
-#include "FluidCube.hpp"
+#include "Fluid.h"
 
 // Rozdzielczość i FPS
 static const int SCREEN_WIDTH = 800;
