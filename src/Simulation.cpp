@@ -1,8 +1,8 @@
-#include "Simulation.hpp"
+#include "Simulation.h"
 
 Simulation::Simulation(): mTimer(Timer::Instance()) {
     // Nazwa okna
-    window_name = "Kaplan Propeller";
+    window_name = "Fluid Simulation";
 
     // Ścieżka do naszego modelu 3D
     model_path 	= "assets/models/Propeller.obj";
@@ -44,8 +44,12 @@ Simulation::~Simulation() {
     if (lineVAO) glDeleteVertexArrays(1, &lineVAO);
     if (lineVBO) glDeleteBuffers(1, &lineVBO);
 
+    if (cubeVAO) glDeleteVertexArrays(1, &cubeVAO);
+    if (cubeVBO) glDeleteBuffers(1, &cubeVBO);
+
     if (shaderProgProp) glDeleteProgram(shaderProgProp);
     if (shaderProgLine) glDeleteProgram(shaderProgLine);
+    if (shaderProgCube) glDeleteProgram(shaderProgCube);
 
     if (glContext) {
         SDL_GL_DestroyContext(glContext);
@@ -94,7 +98,7 @@ void Simulation::mouseMovement(int xoffset, int yoffset) {
 std::string Simulation::readShaderFile(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) {
-        std::cerr << "Failed to open shader file: " << path << std::endl;
+        std::cerr << "[ERROR] Nie można otworzyć shadera: " << path << std::endl;
         return "";
     }
     // Utwórz stringstream do przetrzymywania zawartości pliku
@@ -127,7 +131,7 @@ GLuint Simulation::compileShader(GLenum type, const char* src) {
     if (!success) {
         char info[512]; // Bufor do przechowywania komunikatu o błędzie
         glGetShaderInfoLog(shader, 512, nullptr, info); // Pobiera log błędów
-        std::cerr << "Błąd kompilacji shadera: " << info << std::endl;
+        std::cerr << "[ERROR] Kompilacja shadera nie powiodła się: " << info << std::endl;
     }
 
     return shader;
@@ -141,7 +145,7 @@ GLuint Simulation::createShaderProgram(const std::string& vertName, const std::s
     std::string fragmentSrcStr = readShaderFile(shader_path + fragName);
 
     if (vertexSrcStr.empty() || fragmentSrcStr.empty()) {
-        std::cerr << "Błąd załadowania pliku shadera: " << vertName << " or " << fragName << std::endl;
+        std::cerr << "[ERROR] Nie można załadować pliku shadera: " << vertName << " lub " << fragName << std::endl;
         return 0;
     }
 
@@ -164,7 +168,7 @@ GLuint Simulation::createShaderProgram(const std::string& vertName, const std::s
     GLint success;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
 
-    if (!success) std::cerr << "Linkowanie programu nie powiodło się\n";
+    if (!success) std::cerr << "[ERROR] Linkowanie programu nie powiodło się." << std::endl;
 
     // Po połączeniu programu shadery można usunąć z pamięci GPU
     glDeleteShader(vertex);
@@ -188,7 +192,7 @@ bool Simulation::loadObj(const std::string& path) {
     // Wczytywanie pliku
     bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.c_str());
     if (!ret) {
-        std::cerr << "OBJ load error: " << warn << err << std::endl;
+        std::cerr << "[ERROR] Nie można załadować pliku OBJ: " << warn << err << std::endl;
         return false;
     }
 
@@ -217,35 +221,37 @@ bool Simulation::loadObj(const std::string& path) {
 bool Simulation::Init() {
     // Initializacja SDL3
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cerr << "SDL init failed: " << SDL_GetError() << std::endl;
+        std::cerr << "[ERROR] Inicjalizacja SDL nie powiodła się: " << SDL_GetError() << std::endl;
         return -1;
     }
 
+    // Wymagana wersja OpenGL przynajmniej 3.3
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
     // Tworzenie okna SDL z kontekstem OpenGL
     mWindow = SDL_CreateWindow(window_name.c_str(), SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
 
     if (!mWindow) {
-        std::cerr << "Błąd tworzenia okna: " << SDL_GetError() << std::endl;
+        std::cerr << "[ERROR] Tworzenie okna nie powiodło się: " << SDL_GetError() << std::endl;
         return false;
     }
 
     glContext = SDL_GL_CreateContext(mWindow);
 
     if (!glContext) {
-        std::cerr << "Błąd tworzenia kontekstu OpenGL: " << SDL_GetError() << std::endl;
+        std::cerr << "[ERROR] Tworzenia kontekstu OpenGL nie powiodło się: " << SDL_GetError() << std::endl;
         return false;
     }
 
     // Inicjalizacja biblioteki GLAD do obsługi funkcji OpenGL
-    if (!gladLoadGL()) { std::cerr << "Failed to init GLAD\n"; return -1; }
+    if (!gladLoadGL()) { 
+        std::cerr << "[ERROR] Inicjalizacja GLAD nie powiodła się: " << std::endl; 
+        return -1; 
+    }
 
-    std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "Wersja OpenGL: " << glGetString(GL_VERSION) << '\n' << std::endl;
 
     glEnable(GL_DEPTH_TEST);
 
@@ -255,6 +261,23 @@ bool Simulation::Init() {
     // Funkcja niepotrzebna ponieważ została zaimplementowna klasa Timer
     // SDL_GL_SetSwapInterval(1); // V-sync
 
+    if (!SetPropeller()) {
+        std::cerr << "[ERROR] Nie utworzono programu dla shadera śruby." << std::endl;
+        return false;
+    }
+    if (!SetAxis()) {
+        std::cerr << "[ERROR] Nie utworzono programu dla shadera linii osi." << std::endl;
+        return false;
+    }
+    if (!SetCube()) {
+        std::cerr << "[ERROR] Nie utworzono programu dla shadera kostki." << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool Simulation::SetPropeller() {
     // Tworzenie i wiązanie Vertex Array Object (VAO)
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -306,18 +329,68 @@ bool Simulation::Init() {
     projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
     glUniformMatrix4fv(projLocProp, 1, GL_FALSE, &projection[0][0]);
 
+    return true;
+}
+
+bool Simulation::SetCube() {
+    GLfloat cubeVertices[] = {
+        -0.5f,-0.5f,-0.5f,   0.5f,-0.5f,-0.5f,   0.5f, 0.5f,-0.5f,
+         0.5f, 0.5f,-0.5f,  -0.5f, 0.5f,-0.5f,  -0.5f,-0.5f,-0.5f,
+
+        -0.5f,-0.5f, 0.5f,   0.5f,-0.5f, 0.5f,   0.5f, 0.5f, 0.5f,
+         0.5f, 0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  -0.5f,-0.5f, 0.5f,
+
+        -0.5f, 0.5f, 0.5f,  -0.5f, 0.5f,-0.5f,  -0.5f,-0.5f,-0.5f,
+        -0.5f,-0.5f,-0.5f,  -0.5f,-0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,
+
+         0.5f, 0.5f, 0.5f,   0.5f, 0.5f,-0.5f,   0.5f,-0.5f,-0.5f,
+         0.5f,-0.5f,-0.5f,   0.5f,-0.5f, 0.5f,   0.5f, 0.5f, 0.5f,
+
+        -0.5f,-0.5f,-0.5f,   0.5f,-0.5f,-0.5f,   0.5f,-0.5f, 0.5f,
+         0.5f,-0.5f, 0.5f,  -0.5f,-0.5f, 0.5f,  -0.5f,-0.5f,-0.5f,
+
+        -0.5f, 0.5f,-0.5f,   0.5f, 0.5f,-0.5f,   0.5f, 0.5f, 0.5f,
+         0.5f, 0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  -0.5f, 0.5f,-0.5f
+    };
+
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &cubeVBO);
+
+    glBindVertexArray(cubeVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    shaderProgCube = createShaderProgram("line_vert_shader.glsl", "line_frag_shader.glsl");
+
+    if (!shaderProgCube) return false;
+
+    glUseProgram(shaderProgCube);
+    projLocCube     = glGetUniformLocation(shaderProgCube, "projection");
+    viewLocCube     = glGetUniformLocation(shaderProgCube, "view");
+    modelLocCube    = glGetUniformLocation(shaderProgCube, "model");
+    objColorLocCube = glGetUniformLocation(shaderProgCube, "lineColor");
+    glUniformMatrix4fv(projLocCube, 1, GL_FALSE, &projection[0][0]);
+
+    return true;
+}
+
+bool Simulation::SetAxis() {
     GLfloat lineVertices[] = { 
         // x-axis (red)
-        0.0f, 0.0f, 0.0f,  // start point
-        5.0f, 0.0f, 0.0f,   // end point
+        0.0f, 0.0f, 0.0f,   // x1, y1
+        10.0f, 0.0f, 0.0f,   // x2, y2
         
         // y-axis (green) 
-        0.0f, 0.0f, 0.0f,   // start point
-        0.0f, 5.0f, 0.0f,   // end point
+        0.0f, 0.0f, 0.0f,   
+        0.0f, 10.0f, 0.0f,   
         
         // z-axis (blue)
-        0.0f, 0.0f, 0.0f,   // start point  
-        0.0f, 0.0f, 5.0f    // end point
+        0.0f, 0.0f, 0.0f,    
+        0.0f, 0.0f, 10.0f    
     };
 
     glGenVertexArrays(1, &lineVAO);
@@ -341,7 +414,6 @@ bool Simulation::Init() {
     modelLocLine    = glGetUniformLocation(shaderProgLine, "model");
     objColorLocLine = glGetUniformLocation(shaderProgLine, "lineColor");
     glUniformMatrix4fv(projLocLine, 1, GL_FALSE, &projection[0][0]);
-
 
     return true;
 }
@@ -373,6 +445,9 @@ void Simulation::EarlyUpdate() {
     }
 
     processInput();
+
+    // Aktualizacja kamery
+    view = glm::lookAt(camPos, camPos+camFront, camUp);
 }
 
 void Simulation::Update() {
@@ -392,29 +467,11 @@ void Simulation::LateUpdate() {
     mTimer.Reset();
 }
 
-void Simulation::Render() {
-    // Czyści bufor kolorów i bufor głębokości
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Ustawia kolor tła na czarny (RGBA)
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    // Tworzy macierz widoku (kamera)
-    glm::mat4 view = glm::lookAt(camPos, camPos+camFront, camUp);
-
-    // Renderowanie śruby
-    glUseProgram(shaderProgProp);
-    glUniformMatrix4fv(modelLocProp, 1, GL_FALSE, &propModel[0][0]);
-    glUniformMatrix4fv(viewLocProp, 1, GL_FALSE, &view[0][0]);
-
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
-    glBindVertexArray(0);
-
-    // Renderowanie linii
+// Renderowanie linii osi
+void Simulation::RenderAxis() {
     glUseProgram(shaderProgLine);
 
-    glm::mat4 lineModel = glm::mat4(1.0f);
+    lineModel = glm::mat4(1.0f);
 
     glUniformMatrix4fv(modelLocLine, 1, GL_FALSE, &lineModel[0][0]);
     glUniformMatrix4fv(viewLocLine, 1, GL_FALSE, &view[0][0]);
@@ -435,7 +492,45 @@ void Simulation::Render() {
     glDrawArrays(GL_LINES, 4, 2);
 
     glBindVertexArray(0);
+}
 
+void Simulation::RenderPropeller() {
+    // Renderowanie śruby
+    glUseProgram(shaderProgProp);
+    glUniformMatrix4fv(modelLocProp, 1, GL_FALSE, &propModel[0][0]);
+    glUniformMatrix4fv(viewLocProp, 1, GL_FALSE, &view[0][0]);
+
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
+    glBindVertexArray(0);
+}
+
+void Simulation::RenderCube() {
+    // Renderowanie kostki
+    glUseProgram(shaderProgCube);
+
+    cubeModel = glm::mat4(1.0f);
+
+    glUniformMatrix4fv(modelLocCube, 1, GL_FALSE, &cubeModel[0][0]);
+    glUniformMatrix4fv(viewLocCube, 1, GL_FALSE, &view[0][0]);
+    glUniform3f(objColorLocCube, 1.0f, 0.0f, 0.0f); // red Cube
+
+    glBindVertexArray(cubeVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+}
+
+void Simulation::Render() {
+    // Czyści bufor kolorów i bufor głębokości
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Ustawia kolor tła na czarny (RGBA)
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    if (!simState[0]) RenderAxis();
+    if (!simState[1]) RenderCube();
+    if (!simState[2]) RenderPropeller();
+    
     // Zamień bufor
     SDL_GL_SwapWindow(mWindow);
 }
@@ -453,15 +548,23 @@ void Simulation::Run() {
 
             // Wykrycie naciśnięcia przycisku klawiatury
             if (mEvents.type == SDL_EVENT_KEY_DOWN) {
-                keys[mEvents.key.scancode] = true;
+                int sc = mEvents.key.scancode;
+                keys[sc] = true;
 
-                // Sprawdzenie klawisza ESC
-                if (mEvents.key.scancode == SDL_SCANCODE_ESCAPE)
-                    running = false;
+                switch(sc) {
+                    // Sprawdzenie klawisza ESC
+                    case SDL_SCANCODE_ESCAPE: running = false; break;
 
-                // Zminana trybu myszy za pomocą Q
-                if (mEvents.key.scancode == SDL_SCANCODE_Q)
-                    mouseCapture = !mouseCapture;
+                    // Zminana trybu myszy za pomocą Q
+                    case SDL_SCANCODE_Q: mouseCapture = !mouseCapture; break;
+
+                    default: break;
+                }
+
+                if (sc >= SDL_SCANCODE_1 && sc <= SDL_SCANCODE_9) {
+                    int index = sc - SDL_SCANCODE_1;   // 0–8
+                    simState[index] = !simState[index];
+                }
             }
 
             if (mEvents.type == SDL_EVENT_KEY_UP) 

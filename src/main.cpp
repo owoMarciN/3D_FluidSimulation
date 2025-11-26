@@ -13,7 +13,7 @@
 //            ./turbine                   
 //-------------------------------------------------------
 
-#include "Simulation.hpp"
+#include "Simulation.h"
 
 int main(int argc, char** argv) {
     std::cout << "Symulacja rozpoczęta... \nNaciśnij: \nQ - przełącz tryb myszy\nEsc - wyjdź z symulacji" << std::endl;

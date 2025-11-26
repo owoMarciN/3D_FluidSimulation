@@ -49,6 +49,8 @@ class Simulation {
         // Bufor klawiatury 2^10
         bool keys[1024] = {false};
 
+        bool simState[10] = {false};
+
         // Vertex + Normal
         std::vector<float> vertices;
         std::vector<float> normals;
@@ -65,6 +67,7 @@ class Simulation {
 
         GLuint VAO, VBO, NBO;
         glm::mat4 propModel;
+        glm::mat4 view;
         glm::mat4 projection;
 
         GLuint shaderProgLine;
@@ -76,7 +79,14 @@ class Simulation {
         GLuint lineVAO, lineVBO;
         glm::mat4 lineModel;
 
-        
+        GLuint shaderProgCube;
+        GLint objColorLocCube;
+        GLint modelLocCube;
+        GLint viewLocCube;
+        GLint projLocCube;
+
+        GLuint cubeVAO, cubeVBO;
+        glm::mat4 cubeModel;
 
     public:
 
@@ -92,6 +102,14 @@ class Simulation {
         GLuint compileShader(GLenum type, const char* src);
         GLuint createShaderProgram(const std::string& vertName, const std::string& fragName);
         bool loadObj(const std::string& path);
+
+        bool SetPropeller();
+        bool SetAxis();
+        bool SetCube();
+
+        void RenderPropeller();
+        void RenderAxis();
+        void RenderCube();
 
         void EarlyUpdate();
         void Update();
