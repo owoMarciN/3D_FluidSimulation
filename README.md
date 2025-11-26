@@ -33,7 +33,7 @@ Implementcja prostej symulacji [Fluid Simulation For Dummies](https://www.mikeas
 
 ### Faza 2: Kawitacja
 - [ ] Implementacja pola ciśnienia
-- [ ] Dodanie ułamka pary ```$\alpha$```
+- [ ] Dodanie ułamka pary ```alpha```
 - [ ] Obliczenie lokalnych minimów ciśnienia
 - [ ] Identyfikacja stref niskiego ciśnienia
 - [ ] Renderowanie stref w wyróżniających się kolorach
