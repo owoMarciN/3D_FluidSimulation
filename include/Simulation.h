@@ -48,9 +48,9 @@ class Simulation {
         float propAngle;
 
         // Bufor klawiatury 2^10
-        bool keys[1024] = {false};
+        bool keys[1024];
 
-        bool simState[9] = {false};
+        bool simState[10];
 
         // Vertex + Normal
         std::vector<float> vertices;
