@@ -16,7 +16,7 @@
 #include "Simulation.h"
 
 int main(int argc, char** argv) {
-    std::cout << "Symulacja rozpoczęta... \nNaciśnij: \nQ - przełącz tryb myszy\nEsc - wyjdź z symulacji" << std::endl;
+    std::cout << "Symulacja rozpoczęta...\n\nNaciśnij: \n1 - Renderowanie osi XYZ\n2 - Renderowanie kostki (siatki)\n3 - Renderowanie śmigła\n.\n.\n.\nQ - przełącz tryb myszy\nEsc - wyjdź z symulacji\n" << std::endl;
 
     Simulation& sim = Simulation::Instance();
 

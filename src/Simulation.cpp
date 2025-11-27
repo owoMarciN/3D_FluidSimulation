@@ -5,13 +5,13 @@ Simulation::Simulation(): mTimer(Timer::Instance()) {
     window_name = "Fluid Simulation";
 
     // Ścieżka do naszego modelu 3D
-    model_path 	= "assets/models/Propeller.obj";
+    model_path  = "assets/models/Propeller.obj";
 
     // Ścieżka do shaderów
     shader_path = "assets/shaders/";
 
     // Zmienna upewniająca się, że symulacja pracuje
-    running     = true;
+    running = true;
     
     // Initializujemy symulacje
     if (!Init()) running = false;
@@ -31,7 +31,14 @@ Simulation::Simulation(): mTimer(Timer::Instance()) {
     pitch = 0.0f;
 
     // Kąt obrotu naszej śruby
-    angle = 0.0f;
+    propAngle = 0.0f;
+
+    propModel = glm::mat4(1.0f);
+    cubeModel = glm::mat4(1.0f);
+    lineModel = glm::mat4(1.0f);
+
+    projMatrix = glm::mat4(1.0f);
+    viewMatrix = glm::mat4(1.0f);
 }
 
 Simulation::~Simulation() {
@@ -47,9 +54,9 @@ Simulation::~Simulation() {
     if (cubeVAO) glDeleteVertexArrays(1, &cubeVAO);
     if (cubeVBO) glDeleteBuffers(1, &cubeVBO);
 
-    if (shaderProgProp) glDeleteProgram(shaderProgProp);
-    if (shaderProgLine) glDeleteProgram(shaderProgLine);
-    if (shaderProgCube) glDeleteProgram(shaderProgCube);
+    if (shaderProgramProp) glDeleteProgram(shaderProgramProp);
+    if (shaderProgramLine) glDeleteProgram(shaderProgramLine);
+    if (shaderProgramCube) glDeleteProgram(shaderProgramCube);
 
     if (glContext) {
         SDL_GL_DestroyContext(glContext);
@@ -222,7 +229,7 @@ bool Simulation::Init() {
     // Initializacja SDL3
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "[ERROR] Inicjalizacja SDL nie powiodła się: " << SDL_GetError() << std::endl;
-        return -1;
+        return false;
     }
 
     // Wymagana wersja OpenGL przynajmniej 3.3
@@ -231,7 +238,7 @@ bool Simulation::Init() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     // Tworzenie okna SDL z kontekstem OpenGL
-    mWindow = SDL_CreateWindow(window_name.c_str(), SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
+    mWindow = SDL_CreateWindow(window_name.c_str(), SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
     if (!mWindow) {
         std::cerr << "[ERROR] Tworzenie okna nie powiodło się: " << SDL_GetError() << std::endl;
@@ -248,7 +255,7 @@ bool Simulation::Init() {
     // Inicjalizacja biblioteki GLAD do obsługi funkcji OpenGL
     if (!gladLoadGL()) { 
         std::cerr << "[ERROR] Inicjalizacja GLAD nie powiodła się: " << std::endl; 
-        return -1; 
+        return false; 
     }
 
     std::cout << "Wersja OpenGL: " << glGetString(GL_VERSION) << '\n' << std::endl;
@@ -261,23 +268,25 @@ bool Simulation::Init() {
     // Funkcja niepotrzebna ponieważ została zaimplementowna klasa Timer
     // SDL_GL_SetSwapInterval(1); // V-sync
 
-    if (!SetPropeller()) {
+    if (!CreatePropeller()) {
         std::cerr << "[ERROR] Nie utworzono programu dla shadera śruby." << std::endl;
         return false;
     }
-    if (!SetAxis()) {
-        std::cerr << "[ERROR] Nie utworzono programu dla shadera linii osi." << std::endl;
-        return false;
-    }
-    if (!SetCube()) {
+    
+    if (!CreateCube()) {
         std::cerr << "[ERROR] Nie utworzono programu dla shadera kostki." << std::endl;
         return false;
     }
 
+    if (!CreateAxis()) {
+        std::cerr << "[ERROR] Nie utworzono programu dla shadera linii osi." << std::endl;
+        return false;
+    }
+    
     return true;
 }
 
-bool Simulation::SetPropeller() {
+bool Simulation::CreatePropeller() {
     // Tworzenie i wiązanie Vertex Array Object (VAO)
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -297,42 +306,42 @@ bool Simulation::SetPropeller() {
     glEnableVertexAttribArray(1);
 
     // Shadery
-    shaderProgProp = createShaderProgram("vertex_shader.glsl", "fragment_shader.glsl");
+    shaderProgramProp = createShaderProgram(
+        "vertex_shader.glsl", 
+        "fragment_shader.glsl"
+    );
 
-    if (!shaderProgProp) return false;
+    if (!shaderProgramProp) return false;
 
-    glUseProgram(shaderProgProp);
+    glUseProgram(shaderProgramProp);
 
     // Pobranie informacji z shaderów
-    modelLocProp        = glGetUniformLocation(shaderProgProp, "model"); 
-    viewLocProp         = glGetUniformLocation(shaderProgProp, "view"); 
-    projLocProp         = glGetUniformLocation(shaderProgProp, "projection"); 
-    objColorLocProp     = glGetUniformLocation(shaderProgProp, "objectColor"); 
-    lightPosLoc     = glGetUniformLocation(shaderProgProp, "lightPos"); 
-    lightColorLoc   = glGetUniformLocation(shaderProgProp, "lightColor"); 
-    lightPos2Loc    = glGetUniformLocation(shaderProgProp, "lightPos2"); 
-    lightColor2Loc  = glGetUniformLocation(shaderProgProp, "lightColor2"); 
+    uLocPropeller["model"] = glGetUniformLocation(shaderProgramProp, "model");
+    uLocPropeller["view"] = glGetUniformLocation(shaderProgramProp, "view");
+    uLocPropeller["projection"] = glGetUniformLocation(shaderProgramProp, "projection");
+    uLocPropeller["objectColor"] = glGetUniformLocation(shaderProgramProp, "objectColor");
+    uLocPropeller["lightPos"] = glGetUniformLocation(shaderProgramProp, "lightPos");
+    uLocPropeller["lightColor"] = glGetUniformLocation(shaderProgramProp, "lightColor");
+    uLocPropeller["lightPos2"] = glGetUniformLocation(shaderProgramProp, "lightPos2");
+    uLocPropeller["lightColor2"] = glGetUniformLocation(shaderProgramProp, "lightColor2");
 
     // Ustawienie koloru obiektu (szare)
-    glUniform3f(objColorLocProp, 0.5f, 0.5f, 0.5f); 
+    glUniform3f(uLocPropeller["objectColor"], 0.5f, 0.5f, 0.5f); 
 
     // Ustawienie pozycji i koloru pierwszego światła
-    glUniform3f(lightPosLoc, 0.0f, 0.0f, 3.0f); 
-    glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); 
+    glUniform3f(uLocPropeller["lightPos"], 0.0f, 0.0f, 3.0f); 
+    glUniform3f(uLocPropeller["lightColor"], 1.0f, 1.0f, 1.0f); 
 
     // Ustawienie pozycji i koloru drugiego światła
-    glUniform3f(lightPos2Loc, 0.0f, 0.0f, -3.0f); 
-    glUniform3f(lightColor2Loc, 1.0f, 1.0f, 1.0f); 
+    glUniform3f(uLocPropeller["lightPos2"], 0.0f, 0.0f, -3.0f); 
+    glUniform3f(uLocPropeller["lightColor2"], 1.0f, 1.0f, 1.0f); 
 
-    // Tworzenie macierzy projekcji perspektywy
-    // Jeśli chcemy zmieniać rozmiar okna, przenieść tą funckję do Update
-    projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / SCREEN_HEIGHT, 0.1f, 100.0f);
-    glUniformMatrix4fv(projLocProp, 1, GL_FALSE, &projection[0][0]);
+    glUniformMatrix4fv(uLocPropeller["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
 
     return true;
 }
 
-bool Simulation::SetCube() {
+bool Simulation::CreateCube() {
     GLfloat cubeVertices[] = {
         -0.5f,-0.5f,-0.5f,   0.5f,-0.5f,-0.5f,   0.5f, 0.5f,-0.5f,
          0.5f, 0.5f,-0.5f,  -0.5f, 0.5f,-0.5f,  -0.5f,-0.5f,-0.5f,
@@ -364,21 +373,24 @@ bool Simulation::SetCube() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    shaderProgCube = createShaderProgram("line_vert_shader.glsl", "line_frag_shader.glsl");
+    shaderProgramCube = createShaderProgram(
+        "cube_vert_shader.glsl", 
+        "cube_frag_shader.glsl"
+    );
 
-    if (!shaderProgCube) return false;
+    if (!shaderProgramCube) return false;
 
-    glUseProgram(shaderProgCube);
-    projLocCube     = glGetUniformLocation(shaderProgCube, "projection");
-    viewLocCube     = glGetUniformLocation(shaderProgCube, "view");
-    modelLocCube    = glGetUniformLocation(shaderProgCube, "model");
-    objColorLocCube = glGetUniformLocation(shaderProgCube, "lineColor");
-    glUniformMatrix4fv(projLocCube, 1, GL_FALSE, &projection[0][0]);
+    glUseProgram(shaderProgramCube);
+    uLocCube["projection"] = glGetUniformLocation(shaderProgramCube, "projection");
+    uLocCube["view"] = glGetUniformLocation(shaderProgramCube, "view");
+    uLocCube["model"] = glGetUniformLocation(shaderProgramCube, "model");
+    uLocCube["cubeColor"] = glGetUniformLocation(shaderProgramCube, "cubeColor");
+    glUniformMatrix4fv(uLocCube["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
 
     return true;
 }
 
-bool Simulation::SetAxis() {
+bool Simulation::CreateAxis() {
     GLfloat lineVertices[] = { 
         // x-axis (red)
         0.0f, 0.0f, 0.0f,   // x1, y1
@@ -404,21 +416,32 @@ bool Simulation::SetAxis() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glBindVertexArray(0);
 
-    shaderProgLine = createShaderProgram("line_vert_shader.glsl", "line_frag_shader.glsl");
+    shaderProgramLine = createShaderProgram(
+        "line_vert_shader.glsl", 
+        "line_frag_shader.glsl"
+    );
 
-    if (!shaderProgLine) return false;
+    if (!shaderProgramLine) return false;
 
-    glUseProgram(shaderProgLine);
-    projLocLine     = glGetUniformLocation(shaderProgLine, "projection");
-    viewLocLine     = glGetUniformLocation(shaderProgLine, "view");
-    modelLocLine    = glGetUniformLocation(shaderProgLine, "model");
-    objColorLocLine = glGetUniformLocation(shaderProgLine, "lineColor");
-    glUniformMatrix4fv(projLocLine, 1, GL_FALSE, &projection[0][0]);
+    glUseProgram(shaderProgramLine);
+    uLocLine["projection"] = glGetUniformLocation(shaderProgramLine, "projection");
+    uLocLine["view"] = glGetUniformLocation(shaderProgramLine, "view");
+    uLocLine["model"] = glGetUniformLocation(shaderProgramLine, "model");
+    uLocLine["lineColor"] = glGetUniformLocation(shaderProgramLine, "lineColor");
+    glUniformMatrix4fv(uLocLine["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
 
     return true;
 }
 
 void Simulation::EarlyUpdate() {
+    // Tworzenie macierzy projekcji perspektywy
+    // Jeśli chcemy zmieniać rozmiar okna, przenieść tą funckję do Update
+    SDL_GetWindowSize(mWindow, &widthResize, &heightResize);
+    projMatrix = glm::perspective(glm::radians(45.0f), (float)widthResize / (float)heightResize, 0.1f, 100.0f);
+
+    // Aktualizacja kamery
+    viewMatrix = glm::lookAt(camPos, camPos+camFront, camUp);
+
     // Ogarniamy zmiany trybu 'capture'
     if (mouseCapture != wasCaptured) {
         if (mouseCapture) {
@@ -445,9 +468,6 @@ void Simulation::EarlyUpdate() {
     }
 
     processInput();
-
-    // Aktualizacja kamery
-    view = glm::lookAt(camPos, camPos+camFront, camUp);
 }
 
 void Simulation::Update() {
@@ -459,76 +479,77 @@ void Simulation::Update() {
 }
 
 void Simulation::LateUpdate() {
-    // Obrót śmigłem :)
-    angle += mTimer.DeltaTime() * glm::radians(80.0f); // Obrót 100°/s
-    propModel = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1));
-
     // Reset Timer'a, żeby liczył następne deltaTime
+     // Obrót śmigłem :)
+    propAngle += mTimer.DeltaTime() * glm::radians(80.0f); // Obrót 80°/s
+    propModel = glm::rotate(glm::mat4(1.0f), propAngle, glm::vec3(0, 0, 1));
+
     mTimer.Reset();
 }
 
-// Renderowanie linii osi
-void Simulation::RenderAxis() {
-    glUseProgram(shaderProgLine);
-
-    lineModel = glm::mat4(1.0f);
-
-    glUniformMatrix4fv(modelLocLine, 1, GL_FALSE, &lineModel[0][0]);
-    glUniformMatrix4fv(viewLocLine, 1, GL_FALSE, &view[0][0]);
-
-    glBindVertexArray(lineVAO);
-    glLineWidth(3.0f);
-    // Draw x-axis (red)
-    glUniform3f(objColorLocLine, 1.0f, 0.0f, 0.0f);
-    glDrawArrays(GL_LINES, 0, 2);
-    
-    // Draw y-axis (green)  
-    glUniform3f(objColorLocLine, 0.0f, 1.0f, 0.0f);
-    glDrawArrays(GL_LINES, 2, 2);
-    
-    // Draw z-axis (blue)
-    glUniform3f(objColorLocLine, 0.0f, 0.0f, 1.0f);
-    glDrawArrays(GL_LINES, 4, 2);
-
-    glBindVertexArray(0);
-}
-
-void Simulation::RenderPropeller() {
+void Simulation::DrawPropeller() {
     // Renderowanie śruby
-    glUseProgram(shaderProgProp);
-    glUniformMatrix4fv(modelLocProp, 1, GL_FALSE, &propModel[0][0]);
-    glUniformMatrix4fv(viewLocProp, 1, GL_FALSE, &view[0][0]);
+    glUseProgram(shaderProgramProp);
+    glUniformMatrix4fv(uLocPropeller["model"], 1, GL_FALSE, glm::value_ptr(propModel));
+    glUniformMatrix4fv(uLocPropeller["view"], 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(uLocPropeller["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
     glBindVertexArray(0);
 }
 
-void Simulation::RenderCube() {
+void Simulation::DrawCube() {
     // Renderowanie kostki
-    glUseProgram(shaderProgCube);
+    glUseProgram(shaderProgramCube);
 
-    cubeModel = glm::mat4(1.0f);
-
-    glUniformMatrix4fv(modelLocCube, 1, GL_FALSE, &cubeModel[0][0]);
-    glUniformMatrix4fv(viewLocCube, 1, GL_FALSE, &view[0][0]);
-    glUniform3f(objColorLocCube, 1.0f, 0.0f, 0.0f); // red Cube
+    glUniformMatrix4fv(uLocCube["model"], 1, GL_FALSE, glm::value_ptr(cubeModel));
+    glUniformMatrix4fv(uLocCube["view"], 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(uLocCube["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
+    glUniform3f(uLocCube["cubeColor"], 1.0f, 0.0f, 0.0f); // red Cube
 
     glBindVertexArray(cubeVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 }
 
-void Simulation::Render() {
-    // Czyści bufor kolorów i bufor głębokości
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+// Renderowanie linii osi
+void Simulation::DrawAxis() {
+    glUseProgram(shaderProgramLine);
 
+    glUniformMatrix4fv(uLocLine["model"], 1, GL_FALSE, glm::value_ptr(lineModel));
+    glUniformMatrix4fv(uLocLine["view"], 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(uLocLine["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
+
+    glBindVertexArray(lineVAO);
+    glLineWidth(3.0f);
+    // Draw x-axis (red)
+    glUniform3f(uLocLine["lineColor"], 1.0f, 0.0f, 0.0f);
+    glDrawArrays(GL_LINES, 0, 2);
+    
+    // Draw y-axis (green)  
+    glUniform3f(uLocLine["lineColor"], 0.0f, 1.0f, 0.0f);
+    glDrawArrays(GL_LINES, 2, 2);
+    
+    // Draw z-axis (blue)
+    glUniform3f(uLocLine["lineColor"], 0.0f, 0.0f, 1.0f);
+    glDrawArrays(GL_LINES, 4, 2);
+
+    glBindVertexArray(0);
+}
+
+
+void Simulation::Render() {
     // Ustawia kolor tła na czarny (RGBA)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    if (!simState[0]) RenderAxis();
-    if (!simState[1]) RenderCube();
-    if (!simState[2]) RenderPropeller();
+    // Czyści bufor kolorów i bufor głębokości
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // 0-8
+    if (!simState[0]) DrawAxis();
+    if (!simState[1]) DrawCube();
+    if (!simState[2]) DrawPropeller();
     
     // Zamień bufor
     SDL_GL_SwapWindow(mWindow);
@@ -544,6 +565,12 @@ void Simulation::Run() {
         while (SDL_PollEvent(&mEvents)) {
             if (mEvents.type == SDL_EVENT_QUIT) 
                 running = false;
+
+            if (mEvents.type == SDL_EVENT_WINDOW_RESIZED) {
+                int widthResize = mEvents.window.data1;
+                int heightResize = mEvents.window.data2;
+                glViewport(0, 0, widthResize, heightResize);
+            }
 
             // Wykrycie naciśnięcia przycisku klawiatury
             if (mEvents.type == SDL_EVENT_KEY_DOWN) {
@@ -580,4 +607,3 @@ void Simulation::Run() {
         }
     }
 }
-

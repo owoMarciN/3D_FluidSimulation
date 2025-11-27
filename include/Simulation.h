@@ -23,6 +23,8 @@ class Simulation {
         std::string model_path;
         std::string shader_path;
 
+        int widthResize, heightResize;
+
         bool running;
         Timer& mTimer;
 
@@ -33,57 +35,42 @@ class Simulation {
         glm::vec3 camFront;
         glm::vec3 camUp;
 
-        float prevX;
-        float prevY;
-        float xrel;
-        float yrel;
+        float prevX, prevY;
+        float xrel, yrel;
+
         float cameraSpeed;
         bool mouseCapture;
         bool wasCaptured;
 
         float yaw;
         float pitch;
-        
-        float angle;
+
+        float propAngle;
 
         // Bufor klawiatury 2^10
         bool keys[1024] = {false};
 
-        bool simState[10] = {false};
+        bool simState[9] = {false};
 
         // Vertex + Normal
         std::vector<float> vertices;
         std::vector<float> normals;
 
-        GLuint shaderProgProp;
-        GLint modelLocProp;
-        GLint viewLocProp;
-        GLint projLocProp;
-        GLint objColorLocProp;
-        GLint lightPosLoc;
-        GLint lightColorLoc;
-        GLint lightPos2Loc;
-        GLint lightColor2Loc;
+        GLuint shaderProgramProp;
+        GLuint shaderProgramLine;
+        GLuint shaderProgramCube;
+
+        std::unordered_map<std::string, GLint> uLocPropeller;
+        std::unordered_map<std::string, GLint> uLocLine;
+        std::unordered_map<std::string, GLint> uLocCube;
 
         GLuint VAO, VBO, NBO;
         glm::mat4 propModel;
-        glm::mat4 view;
-        glm::mat4 projection;
-
-        GLuint shaderProgLine;
-        GLint objColorLocLine;
-        GLint modelLocLine;
-        GLint viewLocLine;
-        GLint projLocLine;
+        glm::mat4 viewMatrix;
+        glm::mat4 projMatrix;
 
         GLuint lineVAO, lineVBO;
         glm::mat4 lineModel;
-
-        GLuint shaderProgCube;
-        GLint objColorLocCube;
-        GLint modelLocCube;
-        GLint viewLocCube;
-        GLint projLocCube;
 
         GLuint cubeVAO, cubeVBO;
         glm::mat4 cubeModel;
@@ -101,15 +88,19 @@ class Simulation {
         std::string readShaderFile(const std::string& path);
         GLuint compileShader(GLenum type, const char* src);
         GLuint createShaderProgram(const std::string& vertName, const std::string& fragName);
+
+        void AddUniformVec3(const std::string& name, const glm::vec3& vec);
+        void AddUniformMat4(const std::string& name, const glm::mat4& mat);
+
         bool loadObj(const std::string& path);
 
-        bool SetPropeller();
-        bool SetAxis();
-        bool SetCube();
+        bool CreatePropeller();
+        bool CreateCube();
+        bool CreateAxis();
 
-        void RenderPropeller();
-        void RenderAxis();
-        void RenderCube();
+        void DrawPropeller();
+        void DrawCube();
+        void DrawAxis();
 
         void EarlyUpdate();
         void Update();
