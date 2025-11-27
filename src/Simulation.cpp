@@ -566,9 +566,10 @@ void Simulation::Run() {
             if (mEvents.type == SDL_EVENT_QUIT) 
                 running = false;
 
+            // Wykrywanie zmiany rozmiarów okna
             if (mEvents.type == SDL_EVENT_WINDOW_RESIZED) {
-                int widthResize = mEvents.window.data1;
-                int heightResize = mEvents.window.data2;
+                widthResize = mEvents.window.data1;
+                heightResize = mEvents.window.data2;
                 glViewport(0, 0, widthResize, heightResize);
             }
 
@@ -588,7 +589,7 @@ void Simulation::Run() {
                 }
 
                 if (sc >= SDL_SCANCODE_1 && sc <= SDL_SCANCODE_9) {
-                    int index = sc - SDL_SCANCODE_1;   // 0–8
+                    int index = sc - SDL_SCANCODE_1;   // 0–9
                     simState[index] = !simState[index];
                 }
             }
@@ -607,3 +608,4 @@ void Simulation::Run() {
         }
     }
 }
+
