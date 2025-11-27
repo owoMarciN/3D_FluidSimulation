@@ -16,6 +16,10 @@ Simulation::Simulation(): mTimer(Timer::Instance()) {
     // Initializujemy symulacje
     if (!Init()) running = false;
 
+    // Inicjalizacja tablic
+    std::fill(keys, keys + 1024, false);
+    std::fill(simState, simState + 10, true);
+
     // Pozycja początkowa kamery
     camPos   = glm::vec3(0.0f, 0.0f, 5.0f);
     camFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -547,9 +551,9 @@ void Simulation::Render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // 0-9
-    if (!simState[0]) DrawAxis();
-    if (!simState[1]) DrawCube();
-    if (!simState[2]) DrawPropeller();
+    if (simState[0]) DrawAxis();
+    if (simState[1]) DrawCube();
+    if (simState[2]) DrawPropeller();
     
     // Zamień bufor
     SDL_GL_SwapWindow(mWindow);
@@ -588,7 +592,7 @@ void Simulation::Run() {
                     default: break;
                 }
 
-                if (sc >= SDL_SCANCODE_1 && sc <= SDL_SCANCODE_9) {
+                if (sc >= SDL_SCANCODE_1 && sc <= SDL_SCANCODE_0) {
                     int index = sc - SDL_SCANCODE_1;   // 0–9
                     simState[index] = !simState[index];
                 }
