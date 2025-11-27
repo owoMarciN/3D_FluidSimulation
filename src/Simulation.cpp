@@ -546,7 +546,7 @@ void Simulation::Render() {
     // Czyści bufor kolorów i bufor głębokości
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // 0-8
+    // 0-9
     if (!simState[0]) DrawAxis();
     if (!simState[1]) DrawCube();
     if (!simState[2]) DrawPropeller();
