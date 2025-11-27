@@ -475,7 +475,6 @@ void Simulation::RenderAxis() {
 
     glUniformMatrix4fv(modelLocLine, 1, GL_FALSE, &lineModel[0][0]);
     glUniformMatrix4fv(viewLocLine, 1, GL_FALSE, &view[0][0]);
-    glUniform3f(objColorLocLine, 1.0f, 0.0f, 0.0f); // red line
 
     glBindVertexArray(lineVAO);
     glLineWidth(3.0f);
@@ -581,3 +580,4 @@ void Simulation::Run() {
         }
     }
 }
+
