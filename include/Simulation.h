@@ -7,6 +7,13 @@
 // Dotyczy tylko pliki o rozszerzeniu .obj
 #include <tiny_obj_loader.h>
 
+static const int numKeys = 1024;
+static const int numStates = 10;
+
+static const int cubeNum = 6;
+static const int faceNum = 6;
+static const int vertsPerFace = 6;
+
 class Simulation {
     public:
 
@@ -48,23 +55,23 @@ class Simulation {
         float propAngle;
 
         // Bufor klawiatury 2^10
-        bool keys[1024];
+        bool keys[numKeys];
 
-        bool simState[10];
+        bool simState[numStates];
 
         // Vertex + Normal
-        std::vector<float> vertices;
-        std::vector<float> normals;
+        std::vector<float> propVertices;
+        std::vector<float> propNormals;
 
         GLuint shaderProgramProp;
         GLuint shaderProgramLine;
-        GLuint shaderProgramCube;
+        GLuint shaderProgramMesh;
 
         std::unordered_map<std::string, GLint> uLocPropeller;
         std::unordered_map<std::string, GLint> uLocLine;
-        std::unordered_map<std::string, GLint> uLocCube;
+        std::unordered_map<std::string, GLint> uLocMesh;
 
-        GLuint VAO, VBO, NBO;
+        GLuint propVAO, propVBO, propNBO;
         glm::mat4 propModel;
         glm::mat4 viewMatrix;
         glm::mat4 projMatrix;
@@ -72,8 +79,11 @@ class Simulation {
         GLuint lineVAO, lineVBO;
         glm::mat4 lineModel;
 
-        GLuint cubeVAO, cubeVBO;
-        glm::mat4 cubeModel;
+        bool voxels[cubeNum][cubeNum][cubeNum];
+
+        GLuint voxelMeshVAO, voxelMeshVBO;
+        glm::mat4 voxelMeshModel;
+        std::vector<float> voxelMeshVertices;
 
     public:
 
@@ -89,17 +99,14 @@ class Simulation {
         GLuint compileShader(GLenum type, const char* src);
         GLuint createShaderProgram(const std::string& vertName, const std::string& fragName);
 
-        void AddUniformVec3(const std::string& name, const glm::vec3& vec);
-        void AddUniformMat4(const std::string& name, const glm::mat4& mat);
-
         bool loadObj(const std::string& path);
 
         bool CreatePropeller();
-        bool CreateCube();
+        bool CreateVoxelMesh();
         bool CreateAxis();
 
         void DrawPropeller();
-        void DrawCube();
+        void DrawVoxelMesh();
         void DrawAxis();
 
         void EarlyUpdate();

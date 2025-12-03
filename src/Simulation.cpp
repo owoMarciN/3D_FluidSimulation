@@ -17,8 +17,8 @@ Simulation::Simulation(): mTimer(Timer::Instance()) {
     if (!Init()) running = false;
 
     // Inicjalizacja tablic
-    std::fill(keys, keys + 1024, false);
-    std::fill(simState, simState + 10, true);
+    std::fill(keys, keys + numKeys, false);
+    std::fill(simState, simState + numStates, true);
 
     // Pozycja początkowa kamery
     camPos   = glm::vec3(0.0f, 0.0f, 5.0f);
@@ -37,8 +37,9 @@ Simulation::Simulation(): mTimer(Timer::Instance()) {
     // Kąt obrotu naszej śruby
     propAngle = 0.0f;
 
+    // Models
     propModel = glm::mat4(1.0f);
-    cubeModel = glm::mat4(1.0f);
+    voxelMeshModel = glm::mat4(1.0f);
     lineModel = glm::mat4(1.0f);
 
     projMatrix = glm::mat4(1.0f);
@@ -48,19 +49,19 @@ Simulation::Simulation(): mTimer(Timer::Instance()) {
 Simulation::~Simulation() {
     std::cout << "Simulation -- Destroyed" << std::endl;
     
-    if (VAO) glDeleteVertexArrays(1, &VAO);
-    if (VBO) glDeleteBuffers(1, &VBO);
-    if (NBO) glDeleteBuffers(1, &NBO);
+    if (propVAO) glDeleteVertexArrays(1, &propVAO);
+    if (propVBO) glDeleteBuffers(1, &propVBO);
+    if (propNBO) glDeleteBuffers(1, &propNBO);
 
     if (lineVAO) glDeleteVertexArrays(1, &lineVAO);
     if (lineVBO) glDeleteBuffers(1, &lineVBO);
 
-    if (cubeVAO) glDeleteVertexArrays(1, &cubeVAO);
-    if (cubeVBO) glDeleteBuffers(1, &cubeVBO);
+    if (voxelMeshVAO) glDeleteVertexArrays(1, &voxelMeshVAO);
+    if (voxelMeshVBO) glDeleteBuffers(1, &voxelMeshVBO);
 
     if (shaderProgramProp) glDeleteProgram(shaderProgramProp);
     if (shaderProgramLine) glDeleteProgram(shaderProgramLine);
-    if (shaderProgramCube) glDeleteProgram(shaderProgramCube);
+    if (shaderProgramMesh) glDeleteProgram(shaderProgramMesh);
 
     if (glContext) {
         SDL_GL_DestroyContext(glContext);
@@ -216,13 +217,13 @@ bool Simulation::loadObj(const std::string& path) {
             //      normal_index -> index w attrib.normals
             //      texcoord_index -> index w attrib.texcoords
             // Prosty 1D array [x0, y0, z0, x1, y1, z1, ...]
-            vertices.push_back(attrib.vertices[3 * idx.vertex_index + 0]);
-            vertices.push_back(attrib.vertices[3 * idx.vertex_index + 1]);
-            vertices.push_back(attrib.vertices[3 * idx.vertex_index + 2]);
+            propVertices.push_back(attrib.vertices[3 * idx.vertex_index + 0]);
+            propVertices.push_back(attrib.vertices[3 * idx.vertex_index + 1]);
+            propVertices.push_back(attrib.vertices[3 * idx.vertex_index + 2]);
 
-            normals.push_back(attrib.normals[3 * idx.normal_index + 0]);
-            normals.push_back(attrib.normals[3 * idx.normal_index + 1]);
-            normals.push_back(attrib.normals[3 * idx.normal_index + 2]);
+            propNormals.push_back(attrib.normals[3 * idx.normal_index + 0]);
+            propNormals.push_back(attrib.normals[3 * idx.normal_index + 1]);
+            propNormals.push_back(attrib.normals[3 * idx.normal_index + 2]);
         }
     }
     return true;
@@ -276,12 +277,12 @@ bool Simulation::Init() {
         std::cerr << "[ERROR] Nie utworzono programu dla shadera śruby." << std::endl;
         return false;
     }
-    
-    if (!CreateCube()) {
-        std::cerr << "[ERROR] Nie utworzono programu dla shadera kostki." << std::endl;
+ 
+    if (!CreateVoxelMesh()) {
+        std::cerr << "[ERROR] Nie utworzono programu dla shadera siatki." << std::endl;
         return false;
     }
-
+    
     if (!CreateAxis()) {
         std::cerr << "[ERROR] Nie utworzono programu dla shadera linii osi." << std::endl;
         return false;
@@ -292,20 +293,20 @@ bool Simulation::Init() {
 
 bool Simulation::CreatePropeller() {
     // Tworzenie i wiązanie Vertex Array Object (VAO)
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    glGenVertexArrays(1, &propVAO);
+    glBindVertexArray(propVAO);
 
     // Tworzenie Vertex Buffer Object (VBO) dla wierzchołków
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    glGenBuffers(1, &propVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, propVBO);
+    glBufferData(GL_ARRAY_BUFFER, propVertices.size() * sizeof(float), propVertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
 
     // Tworzenie Vertex Buffer Object (NBO) dla wektorów normalnych
-    glGenBuffers(1, &NBO);
-    glBindBuffer(GL_ARRAY_BUFFER, NBO);
-    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(float), normals.data(), GL_STATIC_DRAW);
+    glGenBuffers(1, &propNBO);
+    glBindBuffer(GL_ARRAY_BUFFER, propNBO);
+    glBufferData(GL_ARRAY_BUFFER, propNormals.size() * sizeof(float), propNormals.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(1);
 
@@ -340,58 +341,149 @@ bool Simulation::CreatePropeller() {
     glUniform3f(uLocPropeller["lightPos2"], 0.0f, 0.0f, -3.0f); 
     glUniform3f(uLocPropeller["lightColor2"], 1.0f, 1.0f, 1.0f); 
 
+    return true;
+}
+
+void Simulation::DrawPropeller() {
+    // Renderowanie śruby
+    glUseProgram(shaderProgramProp);
+    glUniformMatrix4fv(uLocPropeller["model"], 1, GL_FALSE, glm::value_ptr(propModel));
+    glUniformMatrix4fv(uLocPropeller["view"], 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(uLocPropeller["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
+
+    glBindVertexArray(propVAO);
+    glDrawArrays(GL_TRIANGLES, 0, propVertices.size() / 3);
+    glBindVertexArray(0);
+}
+
+bool Simulation::CreateVoxelMesh() {
+    float voxelMeshScale = 0.2f; // zmiana skali na 1:20
+    glm::vec3 voxelMeshOffset = glm::vec3(cubeNum, cubeNum, cubeNum) * voxelMeshScale * 0.5f;
+
+    std::cout << "DEBUG: cubeNum = " << cubeNum << std::endl;
+    std::cout << "DEBUG: voxelMeshScale = " << voxelMeshScale << std::endl;
+    std::cout << "DEBUG: voxelMeshOffset = " << voxelMeshOffset.x << ", " 
+          << voxelMeshOffset.y << ", " << voxelMeshOffset.z << std::endl;
+
+    const glm::vec3 faceVertices[faceNum][vertsPerFace] = {
+        // +X
+        { {1,0,0},{1,1,0},{1,1,1},  {1,1,1},{1,0,1},{1,0,0} },
+        // -X
+        { {0,0,0},{0,0,1},{0,1,1},  {0,1,1},{0,1,0},{0,0,0} },
+        // +Y
+        { {0,1,0},{0,1,1},{1,1,1},  {1,1,1},{1,1,0},{0,1,0} },
+        // -Y
+        { {0,0,0},{1,0,0},{1,0,1},  {1,0,1},{0,0,1},{0,0,0} },
+        // +Z
+        { {0,0,1},{1,0,1},{1,1,1},  {1,1,1},{0,1,1},{0,0,1} },
+        // -Z
+        { {0,0,0},{0,1,0},{1,1,0},  {1,1,0},{1,0,0},{0,0,0} }
+    };
+
+    // Kierunki są używane do sprawdzania sąsiadów każdej komórki 'voxel'
+    // Każdy indeks odpowiada jednej ścianie (face) w kolejności: +X, -X, +Y, -Y, +Z, -Z
+    const int dirX[faceNum] = {1, -1, 0, 0, 0, 0}; // zmiana w osi X dla sąsiada
+    const int dirY[faceNum] = {0, 0, 1, -1, 0, 0}; // zmiana w osi Y dla sąsiada
+    const int dirZ[faceNum] = {0, 0, 0, 0, 1, -1}; // zmiana w osi Z dla sąsiada
+
+    voxelMeshVertices.clear();
+
+    // Inicjalizacja wszystkich voxelów jako "solid" (pełne)
+    for(int x = 0; x < cubeNum; x++)
+        for(int y = 0; y < cubeNum; y++)
+            for(int z = 0; z < cubeNum; z++)
+                voxels[x][y][z] = true;
+
+    // Generowanie wierzchołków siatki tylko dla widocznych ścian
+    for (int x = 0; x < cubeNum; x++)
+        for (int y = 0; y < cubeNum; y++)
+            for (int z = 0; z < cubeNum; z++) {
+
+                if (!voxels[x][y][z]) continue; // pomiń puste komórki
+
+                // Sprawdzenie każdej ze 6 ścian komórki
+                for (int face = 0; face < faceNum; face++) {
+
+                    // Pozycja sąsiada w danym kierunku
+                    int nx = x + dirX[face];
+                    int ny = y + dirY[face];
+                    int nz = z + dirZ[face];
+
+                    // Sprawdzenie, czy sąsiad istnieje i jest pełny
+                    bool neighborSolid =
+                        nx >= 0 && nx < cubeNum &&
+                        ny >= 0 && ny < cubeNum &&
+                        nz >= 0 && nz < cubeNum &&
+                        voxels[nx][ny][nz];
+
+                    if (!neighborSolid) {
+                        // Ta ściana jest widoczna (nie ma pełnego sąsiada)
+                        for (int i = 0; i < vertsPerFace; i++) {
+                            // Dodanie wierzchołków ściany do wektora mesh
+                            // Uwzględniamy skalowanie i przesunięcie, żeby cała siatka była wycentrowana
+                            voxelMeshVertices.push_back((faceVertices[face][i].x + x) * voxelMeshScale - voxelMeshOffset.x);
+                            voxelMeshVertices.push_back((faceVertices[face][i].y + y) * voxelMeshScale - voxelMeshOffset.y);
+                            voxelMeshVertices.push_back((faceVertices[face][i].z + z) * voxelMeshScale - voxelMeshOffset.z);
+                        }
+                    }
+                }
+            }
+    // W CreateVoxelMesh() po wczytaniu
+    std::cout << "Pierwszy wierzcholek: " << voxelMeshVertices[0] << ", " << voxelMeshVertices[1] << ", " << voxelMeshVertices[2] << std::endl;
+    //std::cout << voxelMeshVertices.size() << std::endl;
+
+    glGenVertexArrays(1, &voxelMeshVAO);
+    glGenBuffers(1, &voxelMeshVBO);
+
+    glBindVertexArray(voxelMeshVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, voxelMeshVBO);
+    glBufferData(GL_ARRAY_BUFFER,
+                 voxelMeshVertices.size() * sizeof(float),
+                 voxelMeshVertices.data(),
+                 GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT,GL_FALSE,3*sizeof(float),(void*)0);
+    glEnableVertexAttribArray(0);
+
+    shaderProgramMesh = createShaderProgram(
+        "mesh_vert_shader.glsl", 
+        "mesh_frag_shader.glsl"
+    );
+
+    if (!shaderProgramMesh) return false;
+
+    glUseProgram(shaderProgramMesh);
+
+    // std::cout << shaderProgramMesh << std::endl;
+
+    uLocMesh["projection"] = glGetUniformLocation(shaderProgramMesh, "projection");
+    uLocMesh["view"] = glGetUniformLocation(shaderProgramMesh, "view");
+    uLocMesh["model"] = glGetUniformLocation(shaderProgramMesh, "model");
+    uLocMesh["meshColor"] = glGetUniformLocation(shaderProgramMesh, "meshColor");
+
+    // std::cout << "model=" << uLocMesh["model"] 
+    //       << ", view=" << uLocMesh["view"]
+    //       << ", projection=" << uLocMesh["projection"]
+    //       << ", meshColor=" << uLocMesh["meshColor"] << std::endl;
 
     return true;
 }
 
-bool Simulation::CreateCube() {
-    GLfloat cubeVertices[] = {
-        -0.5f,-0.5f,-0.5f,   0.5f,-0.5f,-0.5f,   0.5f, 0.5f,-0.5f,
-         0.5f, 0.5f,-0.5f,  -0.5f, 0.5f,-0.5f,  -0.5f,-0.5f,-0.5f,
+void Simulation::DrawVoxelMesh() {
+    glUseProgram(shaderProgramMesh);
 
-        -0.5f,-0.5f, 0.5f,   0.5f,-0.5f, 0.5f,   0.5f, 0.5f, 0.5f,
-         0.5f, 0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  -0.5f,-0.5f, 0.5f,
+    glUniformMatrix4fv(uLocMesh["model"], 1, GL_FALSE, glm::value_ptr(voxelMeshModel));
+    glUniformMatrix4fv(uLocMesh["view"], 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(uLocMesh["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
+    glUniform3f(uLocMesh["meshColor"], 1.0f, 0.0f, 0.0f);
+    
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    
+    glBindVertexArray(voxelMeshVAO);
+    glDrawArrays(GL_TRIANGLES, 0, voxelMeshVertices.size() / 3);
+    glBindVertexArray(0);
 
-        -0.5f, 0.5f, 0.5f,  -0.5f, 0.5f,-0.5f,  -0.5f,-0.5f,-0.5f,
-        -0.5f,-0.5f,-0.5f,  -0.5f,-0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,
-
-         0.5f, 0.5f, 0.5f,   0.5f, 0.5f,-0.5f,   0.5f,-0.5f,-0.5f,
-         0.5f,-0.5f,-0.5f,   0.5f,-0.5f, 0.5f,   0.5f, 0.5f, 0.5f,
-
-        -0.5f,-0.5f,-0.5f,   0.5f,-0.5f,-0.5f,   0.5f,-0.5f, 0.5f,
-         0.5f,-0.5f, 0.5f,  -0.5f,-0.5f, 0.5f,  -0.5f,-0.5f,-0.5f,
-
-        -0.5f, 0.5f,-0.5f,   0.5f, 0.5f,-0.5f,   0.5f, 0.5f, 0.5f,
-         0.5f, 0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,  -0.5f, 0.5f,-0.5f
-    };
-
-    glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &cubeVBO);
-
-    glBindVertexArray(cubeVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    shaderProgramCube = createShaderProgram(
-        "cube_vert_shader.glsl", 
-        "cube_frag_shader.glsl"
-    );
-
-    if (!shaderProgramCube) return false;
-
-    glUseProgram(shaderProgramCube);
-    uLocCube["projection"] = glGetUniformLocation(shaderProgramCube, "projection");
-    uLocCube["view"] = glGetUniformLocation(shaderProgramCube, "view");
-    uLocCube["model"] = glGetUniformLocation(shaderProgramCube, "model");
-    uLocCube["cubeColor"] = glGetUniformLocation(shaderProgramCube, "cubeColor");
-    glUniformMatrix4fv(uLocCube["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
-
-    return true;
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 bool Simulation::CreateAxis() {
@@ -432,9 +524,33 @@ bool Simulation::CreateAxis() {
     uLocLine["view"] = glGetUniformLocation(shaderProgramLine, "view");
     uLocLine["model"] = glGetUniformLocation(shaderProgramLine, "model");
     uLocLine["lineColor"] = glGetUniformLocation(shaderProgramLine, "lineColor");
-    glUniformMatrix4fv(uLocLine["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
 
     return true;
+}
+
+// Renderowanie linii osi
+void Simulation::DrawAxis() {
+    glUseProgram(shaderProgramLine);
+
+    glUniformMatrix4fv(uLocLine["model"], 1, GL_FALSE, glm::value_ptr(lineModel));
+    glUniformMatrix4fv(uLocLine["view"], 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(uLocLine["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
+
+    glBindVertexArray(lineVAO);
+    glLineWidth(2.0f);
+    // Draw x-axis (red)
+    glUniform3f(uLocLine["lineColor"], 1.0f, 0.0f, 0.0f);
+    glDrawArrays(GL_LINES, 0, 2);
+    
+    // Draw y-axis (green)  
+    glUniform3f(uLocLine["lineColor"], 0.0f, 1.0f, 0.0f);
+    glDrawArrays(GL_LINES, 2, 2);
+    
+    // Draw z-axis (blue)
+    glUniform3f(uLocLine["lineColor"], 0.0f, 0.0f, 1.0f);
+    glDrawArrays(GL_LINES, 4, 2);
+
+    glBindVertexArray(0);
 }
 
 void Simulation::EarlyUpdate() {
@@ -491,68 +607,23 @@ void Simulation::LateUpdate() {
     mTimer.Reset();
 }
 
-void Simulation::DrawPropeller() {
-    // Renderowanie śruby
-    glUseProgram(shaderProgramProp);
-    glUniformMatrix4fv(uLocPropeller["model"], 1, GL_FALSE, glm::value_ptr(propModel));
-    glUniformMatrix4fv(uLocPropeller["view"], 1, GL_FALSE, glm::value_ptr(viewMatrix));
-    glUniformMatrix4fv(uLocPropeller["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
-
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
-    glBindVertexArray(0);
-}
-
-void Simulation::DrawCube() {
-    // Renderowanie kostki
-    glUseProgram(shaderProgramCube);
-
-    glUniformMatrix4fv(uLocCube["model"], 1, GL_FALSE, glm::value_ptr(cubeModel));
-    glUniformMatrix4fv(uLocCube["view"], 1, GL_FALSE, glm::value_ptr(viewMatrix));
-    glUniformMatrix4fv(uLocCube["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
-    glUniform3f(uLocCube["cubeColor"], 1.0f, 0.0f, 0.0f); // red Cube
-
-    glBindVertexArray(cubeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
-}
-
-// Renderowanie linii osi
-void Simulation::DrawAxis() {
-    glUseProgram(shaderProgramLine);
-
-    glUniformMatrix4fv(uLocLine["model"], 1, GL_FALSE, glm::value_ptr(lineModel));
-    glUniformMatrix4fv(uLocLine["view"], 1, GL_FALSE, glm::value_ptr(viewMatrix));
-    glUniformMatrix4fv(uLocLine["projection"], 1, GL_FALSE, glm::value_ptr(projMatrix));
-
-    glBindVertexArray(lineVAO);
-    glLineWidth(3.0f);
-    // Draw x-axis (red)
-    glUniform3f(uLocLine["lineColor"], 1.0f, 0.0f, 0.0f);
-    glDrawArrays(GL_LINES, 0, 2);
-    
-    // Draw y-axis (green)  
-    glUniform3f(uLocLine["lineColor"], 0.0f, 1.0f, 0.0f);
-    glDrawArrays(GL_LINES, 2, 2);
-    
-    // Draw z-axis (blue)
-    glUniform3f(uLocLine["lineColor"], 0.0f, 0.0f, 1.0f);
-    glDrawArrays(GL_LINES, 4, 2);
-
-    glBindVertexArray(0);
-}
-
-
 void Simulation::Render() {
     // Ustawia kolor tła na czarny (RGBA)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+    glEnable(GL_DEPTH_TEST);
     // Czyści bufor kolorów i bufor głębokości
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // 0-9
     if (simState[0]) DrawAxis();
-    if (simState[1]) DrawCube();
+    
+    if (simState[1]) {
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        DrawVoxelMesh();
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    
     if (simState[2]) DrawPropeller();
     
     // Zamień bufor
@@ -612,4 +683,3 @@ void Simulation::Run() {
         }
     }
 }
-
