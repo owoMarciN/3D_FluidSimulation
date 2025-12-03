@@ -24,7 +24,7 @@ W projekcie zostały użyte następujace biblioteki:
 ### Faza 1: Stworzenie rozwiązania dla symulacji (
 Implementcja prostej symulacji [Fluid Simulation For Dummies](https://www.mikeash.com/pyblog/fluid-simulation-for-dummies.html)
 - [x] Stworzenie klasy ```FluidCube```
-- [ ] Renderowanie siatki komórek
+- [x] Renderowanie siatki komórek
 - [ ] Renderowanie gęstości ```barwnika```
 - [ ] Renderowanie pól wektoryowych prędkości
 - [ ] Zaznaczanie komórek siatki wokół obiektu
