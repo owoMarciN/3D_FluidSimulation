@@ -601,18 +601,13 @@ void Simulation::Render() {
     // Ustawia kolor tła na czarny (RGBA)
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    glEnable(GL_DEPTH_TEST);
     // Czyści bufor kolorów i bufor głębokości
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // 0-9
     if (simState[0]) DrawAxis();
     
-    if (simState[1]) {
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        DrawVoxelMesh();
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
+    if (simState[1]) DrawVoxelMesh();
     
     if (simState[2]) DrawPropeller();
     
