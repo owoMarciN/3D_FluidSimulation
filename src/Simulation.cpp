@@ -37,7 +37,7 @@ Simulation::Simulation(): mTimer(Timer::Instance()) {
     // Kąt obrotu naszej śruby
     propAngle = 0.0f;
 
-    // Models
+    // Matryce modeli przydatne jeśli chcemy transformacje, rotacje, czy skalownie
     propModel = glm::mat4(1.0f);
     voxelMeshModel = glm::mat4(1.0f);
     lineModel = glm::mat4(1.0f);
@@ -357,13 +357,8 @@ void Simulation::DrawPropeller() {
 }
 
 bool Simulation::CreateVoxelMesh() {
-    float voxelMeshScale = 0.2f; // zmiana skali na 1:20
+    float voxelMeshScale = 0.2f; // zmiana skali na 1:5
     glm::vec3 voxelMeshOffset = glm::vec3(cubeNum, cubeNum, cubeNum) * voxelMeshScale * 0.5f;
-
-    std::cout << "DEBUG: cubeNum = " << cubeNum << std::endl;
-    std::cout << "DEBUG: voxelMeshScale = " << voxelMeshScale << std::endl;
-    std::cout << "DEBUG: voxelMeshOffset = " << voxelMeshOffset.x << ", " 
-          << voxelMeshOffset.y << ", " << voxelMeshOffset.z << std::endl;
 
     const glm::vec3 faceVertices[faceNum][vertsPerFace] = {
         // +X
@@ -428,10 +423,7 @@ bool Simulation::CreateVoxelMesh() {
                     }
                 }
             }
-    // W CreateVoxelMesh() po wczytaniu
-    std::cout << "Pierwszy wierzcholek: " << voxelMeshVertices[0] << ", " << voxelMeshVertices[1] << ", " << voxelMeshVertices[2] << std::endl;
-    //std::cout << voxelMeshVertices.size() << std::endl;
-
+            
     glGenVertexArrays(1, &voxelMeshVAO);
     glGenBuffers(1, &voxelMeshVBO);
 
@@ -454,17 +446,15 @@ bool Simulation::CreateVoxelMesh() {
 
     glUseProgram(shaderProgramMesh);
 
-    // std::cout << shaderProgramMesh << std::endl;
-
     uLocMesh["projection"] = glGetUniformLocation(shaderProgramMesh, "projection");
     uLocMesh["view"] = glGetUniformLocation(shaderProgramMesh, "view");
     uLocMesh["model"] = glGetUniformLocation(shaderProgramMesh, "model");
     uLocMesh["meshColor"] = glGetUniformLocation(shaderProgramMesh, "meshColor");
-
-    // std::cout << "model=" << uLocMesh["model"] 
-    //       << ", view=" << uLocMesh["view"]
-    //       << ", projection=" << uLocMesh["projection"]
-    //       << ", meshColor=" << uLocMesh["meshColor"] << std::endl;
+    
+    std::cout << "model=" << uLocMesh["model"] 
+          << ", view=" << uLocMesh["view"]
+          << ", projection=" << uLocMesh["projection"]
+          << ", meshColor=" << uLocMesh["meshColor"] << std::endl;
 
     return true;
 }
